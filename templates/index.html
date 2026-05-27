@@ -549,7 +549,13 @@ function sendChat(){
   var lang=RWi18n.getLocale();
   box.innerHTML+='<div class="msg user">'+msg.replace(/</g,'&lt;')+'</div>';
   inp.value='';box.scrollTop=box.scrollHeight;
-  post('/api/chat',{message:msg,lang:lang}).then(function(r){
+  
+  var payload = {message:msg, lang:lang};
+  if(window.currentLocation) {
+    payload.context = JSON.stringify(window.currentLocation);
+  }
+
+  post('/api/chat', payload).then(function(r){
     var txt=r.response.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
     box.innerHTML+='<div class="msg bot">'+txt+'</div>';
     box.scrollTop=box.scrollHeight;
@@ -615,6 +621,7 @@ function reverseGeocode(lat,lon){
   content.innerHTML='<span class="loading">'+RWi18n.t('map.identifying')+' '+lat.toFixed(5)+', '+lon.toFixed(5)+'...</span>';
   fetch(A+'/api/geo/reverse?lat='+lat+'&lon='+lon).then(function(r){return r.json()}).then(function(d){
     if(d.error){content.innerHTML='<span style="color:var(--red)">Error: '+d.error+'</span>';return}
+    window.currentLocation = d;
     var auth=d.authority||{};
     var rtColor=d.road_type==='NH'?'blue':d.road_type==='SH'?'green':d.road_type==='Village'?'orange':'navy';
     content.innerHTML=''
