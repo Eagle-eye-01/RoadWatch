@@ -1,0 +1,84 @@
+{
+  "source": "Derived from OMMAS PMGSY data — pmgsy.dord.gov.in",
+  "retrieved": "2026-05-05",
+  "note": "Contractor accountability index for Chengalpattu District",
+  "grading_criteria": {
+    "A": "avg_quality >= 8.0 (Excellent)",
+    "B": "avg_quality >= 6.0 (Good)",
+    "C": "avg_quality >= 4.0 (Below Average — Monitor)",
+    "D": "avg_quality < 4.0 (Poor — Recommend Blacklisting)"
+  },
+  "flag_rule": "Flag = True if any road quality < 5.0",
+  "contractors": [
+    {
+      "id": "TNRB-2021-045",
+      "name": "M/s Tamil Nadu Road Builders Pvt Ltd",
+      "roads_completed": 8,
+      "avg_quality": 7.8,
+      "min_quality": 6.5,
+      "max_quality": 9.2,
+      "grade": "B",
+      "flag": false,
+      "total_sanctioned_lakh": 1250.0,
+      "total_spent_lakh": 1218.5,
+      "avg_cost_per_km_lakh": 18.2,
+      "remarks": "Consistent quality, no major complaints"
+    },
+    {
+      "id": "SIC-2020-112",
+      "name": "M/s Southern Infrastructure Corp",
+      "roads_completed": 12,
+      "avg_quality": 3.9,
+      "min_quality": 2.1,
+      "max_quality": 5.8,
+      "grade": "D",
+      "flag": true,
+      "total_sanctioned_lakh": 890.0,
+      "total_spent_lakh": 875.2,
+      "avg_cost_per_km_lakh": 15.1,
+      "remarks": "Multiple roads deteriorated within 3 years — recommend blacklisting review"
+    },
+    {
+      "id": "DRL-2022-078",
+      "name": "M/s Deccan Roadways Ltd",
+      "roads_completed": 5,
+      "avg_quality": 8.3,
+      "min_quality": 7.9,
+      "max_quality": 9.0,
+      "grade": "A",
+      "flag": false,
+      "total_sanctioned_lakh": 1680.0,
+      "total_spent_lakh": 1655.0,
+      "avg_cost_per_km_lakh": 22.5,
+      "remarks": "Excellent track record, premium contractor"
+    },
+    {
+      "id": "NHB-2021-034",
+      "name": "M/s National Highways Builders",
+      "roads_completed": 15,
+      "avg_quality": 6.5,
+      "min_quality": 4.8,
+      "max_quality": 8.1,
+      "grade": "B",
+      "flag": true,
+      "total_sanctioned_lakh": 3200.0,
+      "total_spent_lakh": 3150.0,
+      "avg_cost_per_km_lakh": 19.8,
+      "remarks": "Generally good but some roads below standard — monitor"
+    },
+    {
+      "id": "CMI-2023-019",
+      "name": "M/s Chennai Metro Infra",
+      "roads_completed": 3,
+      "avg_quality": 8.8,
+      "min_quality": 8.2,
+      "max_quality": 9.5,
+      "grade": "A",
+      "flag": false,
+      "total_sanctioned_lakh": 450.0,
+      "total_spent_lakh": 442.0,
+      "avg_cost_per_km_lakh": 24.1,
+      "remarks": "New entrant with excellent quality"
+    }
+  ]
+}

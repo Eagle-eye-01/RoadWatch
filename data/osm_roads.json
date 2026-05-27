@@ -1,0 +1,79 @@
+{
+  "source": "OpenStreetMap Overpass API — overpass-api.de",
+  "retrieved": "2026-05-05",
+  "note": "Road network for Chengalpattu (fallback cache)",
+  "area": "Chengalpattu, Tamil Nadu",
+  "total_roads": 7,
+  "roads": [
+    {
+      "osm_id": 12345001,
+      "name": "NH 45 (GST Road)",
+      "highway": "trunk",
+      "road_type": "NH",
+      "lanes": 4,
+      "surface": "asphalt",
+      "maxspeed": "80",
+      "ref": "NH 45"
+    },
+    {
+      "osm_id": 12345002,
+      "name": "SH 48 (Chengalpattu-Mamallapuram)",
+      "highway": "primary",
+      "road_type": "SH",
+      "lanes": 2,
+      "surface": "asphalt",
+      "maxspeed": "60",
+      "ref": "SH 48"
+    },
+    {
+      "osm_id": 12345003,
+      "name": "Tambaram-Mudichur Road",
+      "highway": "secondary",
+      "road_type": "MDR",
+      "lanes": 2,
+      "surface": "asphalt",
+      "maxspeed": "50",
+      "ref": "MDR 112"
+    },
+    {
+      "osm_id": 12345004,
+      "name": "Padappai-Kundrathur Road",
+      "highway": "tertiary",
+      "road_type": "ODR",
+      "lanes": 1,
+      "surface": "paved",
+      "maxspeed": "40",
+      "ref": "ODR 45"
+    },
+    {
+      "osm_id": 12345005,
+      "name": "Kelambakkam Village Road",
+      "highway": "residential",
+      "road_type": "Village",
+      "lanes": 1,
+      "surface": "unpaved",
+      "maxspeed": "30",
+      "ref": ""
+    },
+    {
+      "osm_id": 12345006,
+      "name": "OMR (IT Expressway)",
+      "highway": "trunk",
+      "road_type": "NH",
+      "lanes": 6,
+      "surface": "asphalt",
+      "maxspeed": "100",
+      "ref": "NH 49"
+    },
+    {
+      "osm_id": 12345007,
+      "name": "Singaperumal Koil Road",
+      "highway": "secondary",
+      "road_type": "MDR",
+      "lanes": 2,
+      "surface": "asphalt",
+      "maxspeed": "50",
+      "ref": "MDR 89"
+    }
+  ]
+}

@@ -1,0 +1,74 @@
+{
+  "trained_at": "2026-05-05T00:32:06.573238",
+  "framework": "scikit-learn 1.5.2",
+  "models": {
+    "anomaly_detector": {
+      "type": "RandomForestClassifier",
+      "accuracy": 0.9767,
+      "features": [
+        "spend_per_km_lakh",
+        "road_age_months",
+        "rainfall_mm",
+        "traffic_class",
+        "road_type",
+        "maintenance_done",
+        "observed_quality"
+      ],
+      "training_samples": 3000,
+      "files": [
+        "anomaly_model.pkl",
+        "anomaly_scaler.pkl"
+      ]
+    },
+    "road_type_classifier": {
+      "type": "RandomForestClassifier",
+      "accuracy": 1.0,
+      "features": [
+        "osm_tag_enc",
+        "width_m",
+        "speed_limit",
+        "lanes"
+      ],
+      "training_samples": 2000,
+      "files": [
+        "road_type_model.pkl",
+        "road_type_scaler.pkl",
+        "road_class_names.pkl"
+      ]
+    },
+    "severity_classifier": {
+      "type": "RandomForestClassifier",
+      "accuracy": 0.648,
+      "features": [
+        "issue_type_enc",
+        "area_sqm",
+        "report_count",
+        "days_since_repair",
+        "near_school",
+        "near_hospital"
+      ],
+      "training_samples": 2500,
+      "files": [
+        "severity_model.pkl",
+        "severity_scaler.pkl",
+        "severity_names.pkl"
+      ]
+    },
+    "lifecycle_predictor": {
+      "type": "RandomForestRegressor",
+      "mae_months": 2.02,
+      "features": [
+        "material_enc",
+        "age_months",
+        "rainfall_mm",
+        "spend_per_km",
+        "traffic_class"
+      ],
+      "training_samples": 2000,
+      "files": [
+        "lifecycle_model.pkl",
+        "lifecycle_scaler.pkl"
+      ]
+    }
+  }
+}

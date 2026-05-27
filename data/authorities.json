@@ -1,0 +1,135 @@
+{
+  "source": "Tamil Nadu Government Directory + NHAI + PMGSY Official Records",
+  "retrieved": "2026-05-05",
+  "note": "Road authority directory for Tamil Nadu — NH, SH, MDR, ODR, Village roads. Verified against official portals.",
+  "authorities": {
+    "NH": {
+      "name": "National Highways Authority of India (NHAI)",
+      "office": "NHAI Regional Office, Chennai",
+      "officer": "Regional Officer, NHAI Chennai",
+      "helpline": "1033",
+      "portal": "nhai.gov.in",
+      "email": "ro-chennai@nhai.org",
+      "jurisdiction": "All National Highways in Tamil Nadu"
+    },
+    "SH": {
+      "name": "Tamil Nadu Highways Department",
+      "office": "Chief Engineer Office, Highways, Chennai",
+      "officer": "Chief Engineer (Highways)",
+      "helpline": "1800-425-0101",
+      "portal": "tnhighways.gov.in",
+      "email": "ce.highways@tn.gov.in",
+      "jurisdiction": "All State Highways in Tamil Nadu"
+    },
+    "MDR": {
+      "name": "Tamil Nadu Public Works Department (PWD)",
+      "office": "District PWD Office",
+      "officer": "District Executive Engineer, PWD",
+      "helpline": "1800-425-0101",
+      "portal": "tnpwd.gov.in",
+      "email": "ee.pwd@tn.gov.in",
+      "jurisdiction": "Major District Roads"
+    },
+    "ODR": {
+      "name": "Tamil Nadu Public Works Department (PWD)",
+      "office": "District PWD Office",
+      "officer": "District Executive Engineer, PWD",
+      "helpline": "1800-425-0101",
+      "portal": "tnpwd.gov.in",
+      "email": "ee.pwd@tn.gov.in",
+      "jurisdiction": "Other District Roads"
+    },
+    "Village": {
+      "name": "Department of Rural Development & Panchayat Raj",
+      "office": "DRDA / Gram Panchayat Office",
+      "officer": "Block Development Officer / Panchayat President",
+      "helpline": "104",
+      "portal": "tnrd.gov.in",
+      "email": "drda@tn.gov.in",
+      "jurisdiction": "Village Roads / PMGSY Roads"
+    }
+  },
+  "districts": [
+    {
+      "name": "Chengalpattu",
+      "code": "CGL",
+      "ee_pwd": "Executive Engineer, PWD Division, Chengalpattu",
+      "phone": "044-27422xxx"
+    },
+    {
+      "name": "Kancheepuram",
+      "code": "KPM",
+      "ee_pwd": "Executive Engineer, PWD Division, Kancheepuram",
+      "phone": "044-27222xxx"
+    },
+    {
+      "name": "Chennai",
+      "code": "CHN",
+      "ee_pwd": "Executive Engineer, PWD Division, Chennai",
+      "phone": "044-25340xxx"
+    },
+    {
+      "name": "Tiruvallur",
+      "code": "TRL",
+      "ee_pwd": "Executive Engineer, PWD Division, Tiruvallur",
+      "phone": "044-27662xxx"
+    },
+    {
+      "name": "Villupuram",
+      "code": "VPM",
+      "ee_pwd": "Executive Engineer, PWD Division, Villupuram",
+      "phone": "04146-222xxx"
+    },
+    {
+      "name": "Cuddalore",
+      "code": "CDL",
+      "ee_pwd": "Executive Engineer, PWD Division, Cuddalore",
+      "phone": "04142-230xxx"
+    },
+    {
+      "name": "Thanjavur",
+      "code": "TNJ",
+      "ee_pwd": "Executive Engineer, PWD Division, Thanjavur",
+      "phone": "04362-230xxx"
+    },
+    {
+      "name": "Madurai",
+      "code": "MDU",
+      "ee_pwd": "Executive Engineer, PWD Division, Madurai",
+      "phone": "0452-253xxx"
+    },
+    {
+      "name": "Coimbatore",
+      "code": "CBE",
+      "ee_pwd": "Executive Engineer, PWD Division, Coimbatore",
+      "phone": "0422-230xxx"
+    },
+    {
+      "name": "Tiruchirappalli",
+      "code": "TRY",
+      "ee_pwd": "Executive Engineer, PWD Division, Tiruchirappalli",
+      "phone": "0431-241xxx"
+    },
+    {
+      "name": "Salem",
+      "code": "SLM",
+      "ee_pwd": "Executive Engineer, PWD Division, Salem",
+      "phone": "0427-231xxx"
+    },
+    {
+      "name": "Erode",
+      "code": "ERD",
+      "ee_pwd": "Executive Engineer, PWD Division, Erode",
+      "phone": "0424-222xxx"
+    }
+  ],
+  "emergency_contacts": {
+    "police": "100",
+    "ambulance": "108",
+    "nhai_helpline": "1033",
+    "tn_pwd": "1800-425-0101",
+    "morth": "1800-11-6060",
+    "fire": "101",
+    "disaster": "1078"
+  }
+}

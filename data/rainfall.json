@@ -1,0 +1,110 @@
+{
+  "source": "IMD Open Data — mausam.imd.gov.in",
+  "retrieved": "2026-05-05",
+  "note": "District-wise annual average rainfall for Tamil Nadu",
+  "state": "Tamil Nadu",
+  "total_districts": 20,
+  "year": "2024-25 average",
+  "districts": [
+    {
+      "name": "Chennai",
+      "annual_rainfall_mm": 1400,
+      "category": "High"
+    },
+    {
+      "name": "Chengalpattu",
+      "annual_rainfall_mm": 1280,
+      "category": "High"
+    },
+    {
+      "name": "Kancheepuram",
+      "annual_rainfall_mm": 1250,
+      "category": "High"
+    },
+    {
+      "name": "Tiruvallur",
+      "annual_rainfall_mm": 1180,
+      "category": "High"
+    },
+    {
+      "name": "Villupuram",
+      "annual_rainfall_mm": 1150,
+      "category": "High"
+    },
+    {
+      "name": "Cuddalore",
+      "annual_rainfall_mm": 1320,
+      "category": "High"
+    },
+    {
+      "name": "Thanjavur",
+      "annual_rainfall_mm": 950,
+      "category": "Medium"
+    },
+    {
+      "name": "Tiruchirappalli",
+      "annual_rainfall_mm": 820,
+      "category": "Medium"
+    },
+    {
+      "name": "Madurai",
+      "annual_rainfall_mm": 850,
+      "category": "Medium"
+    },
+    {
+      "name": "Coimbatore",
+      "annual_rainfall_mm": 700,
+      "category": "Medium"
+    },
+    {
+      "name": "Salem",
+      "annual_rainfall_mm": 880,
+      "category": "Medium"
+    },
+    {
+      "name": "Erode",
+      "annual_rainfall_mm": 750,
+      "category": "Medium"
+    },
+    {
+      "name": "Tirunelveli",
+      "annual_rainfall_mm": 780,
+      "category": "Medium"
+    },
+    {
+      "name": "Thoothukudi",
+      "annual_rainfall_mm": 650,
+      "category": "Low"
+    },
+    {
+      "name": "Dindigul",
+      "annual_rainfall_mm": 820,
+      "category": "Medium"
+    },
+    {
+      "name": "Vellore",
+      "annual_rainfall_mm": 950,
+      "category": "Medium"
+    },
+    {
+      "name": "Ranipet",
+      "annual_rainfall_mm": 920,
+      "category": "Medium"
+    },
+    {
+      "name": "Tiruvannamalai",
+      "annual_rainfall_mm": 1000,
+      "category": "Medium"
+    },
+    {
+      "name": "Nilgiris",
+      "annual_rainfall_mm": 1900,
+      "category": "Very High"
+    },
+    {
+      "name": "Kanyakumari",
+      "annual_rainfall_mm": 1450,
+      "category": "High"
+    }
+  ]
+}

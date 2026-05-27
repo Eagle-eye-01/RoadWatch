@@ -1,0 +1,64 @@
+{
+  "source": "Open Government Data Platform India — data.gov.in",
+  "retrieved": "2026-05-05",
+  "api_base": "https://api.data.gov.in/resource/{resource_id}",
+  "note": "Live data fetched from data.gov.in API using public demo key",
+  "datasets_fetched": 5,
+  "datasets": {
+    "nh_length": {
+      "source": "data.gov.in API — api.data.gov.in/resource/5514a092-fa52-4d74-8998-eb93be0dac69",
+      "retrieved": "2026-05-05",
+      "organization": "Ministry of Road Transport and Highways",
+      "title": "State/UT wise length of National Highways in India during 2009-11",
+      "api_key_used": "Public demo key (579b464db66ec23bdd000001)",
+      "note": "Real data fetched live from Open Government Data Platform India",
+      "records": [],
+      "api_status": "error",
+      "message": "HTTPSConnectionPool(host='api.data.gov.in', port=443): Read timed out. (read timeout=30)"
+    },
+    "srtu_financials": {
+      "source": "data.gov.in API — api.data.gov.in/resource/d906f7fa-3003-4227-99a7-ff8cb47d564d",
+      "retrieved": "2026-05-05",
+      "organization": "Ministry of Road Transport and Highways",
+      "title": "Financial Performance of SRTUs for the year 2009-10",
+      "api_key_used": "Public demo key (579b464db66ec23bdd000001)",
+      "note": "Real data fetched live from Open Government Data Platform India",
+      "records": [],
+      "api_status": "error",
+      "message": "HTTPSConnectionPool(host='api.data.gov.in', port=443): Read timed out. (read timeout=30)"
+    },
+    "village_connectivity": {
+      "source": "data.gov.in API — api.data.gov.in/resource/a3dd588d-aaf4-4887-96b7-96a5b4e6970d",
+      "retrieved": "2026-05-05",
+      "organization": "Ministry of Road Transport and Highways",
+      "title": "State/UT-wise Village Connectivity with Population 1500 and Above",
+      "api_key_used": "Public demo key (579b464db66ec23bdd000001)",
+      "note": "Real data fetched live from Open Government Data Platform India",
+      "records": [],
+      "api_status": "error",
+      "message": "HTTPSConnectionPool(host='api.data.gov.in', port=443): Read timed out. (read timeout=30)"
+    },
+    "road_accidents": {
+      "source": "data.gov.in API — api.data.gov.in/resource/e45c50b4-cd6a-4d46-a258-4c68c45197c8",
+      "retrieved": "2026-05-05",
+      "organization": "Ministry of Road Transport and Highways",
+      "title": "State/UT-wise Accidents by Non-Use of Safety Device during 2018",
+      "api_key_used": "Public demo key (579b464db66ec23bdd000001)",
+      "note": "Real data fetched live from Open Government Data Platform India",
+      "records": [],
+      "api_status": "error",
+      "message": "HTTPSConnectionPool(host='api.data.gov.in', port=443): Read timed out. (read timeout=30)"
+    },
+    "bus_fleet": {
+      "source": "data.gov.in API — api.data.gov.in/resource/105ab1ed-e1a3-4942-9e8e-3c8bd34f8d90",
+      "retrieved": "2026-05-05",
+      "organization": "Ministry of Road Transport and Highways",
+      "title": "State/UT wise Total Bus Fleet and Buses in Public Sector 2011-12",
+      "api_key_used": "Public demo key (579b464db66ec23bdd000001)",
+      "note": "Real data fetched live from Open Government Data Platform India",
+      "records": [],
+      "api_status": "error",
+      "message": "HTTPSConnectionPool(host='api.data.gov.in', port=443): Read timed out. (read timeout=30)"
+    }
+  }
+}

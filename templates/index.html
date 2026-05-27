@@ -1,0 +1,641 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="description" content="RoadWatch AI - Government Road Quality Monitor and Budget Transparency Platform. Supports Hindi, Bengali, Tamil, Telugu, Marathi.">
+<link rel="icon" type="image/png" href="/static/logo.png">
+<link rel="apple-touch-icon" href="/static/logo.png">
+<title>RoadWatch AI | Road Quality Monitor</title>
+<link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<!-- Google Fonts: Noto Sans family for Indic script rendering -->
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Sans:wght@400;500;600;700;800&family=Noto+Sans+Devanagari:wght@400;500;600;700;800&family=Noto+Sans+Bengali:wght@400;500;600;700;800&family=Noto+Sans+Tamil:wght@400;500;600;700;800&family=Noto+Sans+Telugu:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*{margin:0;padding:0;box-sizing:border-box}
+:root{
+  --navy:#003366;--navy2:#00254d;--saffron:#FF9933;--green:#138808;
+  --white:#fff;--bg:#f0f2f5;--card:#fff;--border:#d1d5db;
+  --text:#1a1a2e;--muted:#555;--light:#e8ecf1;--blue-light:#e8f0fe;
+  --red:#c0392b;--orange:#e67e22;
+  --shadow:0 2px 8px rgba(0,0,0,.06);
+  --radius:8px;
+  --font-stack:'Noto Sans','Noto Sans Devanagari','Noto Sans Bengali','Noto Sans Tamil','Noto Sans Telugu',system-ui,-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;
+}
+body{font-family:var(--font-stack);background:var(--bg);color:var(--text);font-size:16px;line-height:1.65;-webkit-font-smoothing:antialiased}
+
+/* Top band */
+.topband{background:linear-gradient(90deg,var(--saffron),var(--white) 33%,var(--white) 66%,var(--green));height:5px}
+
+/* Header */
+header{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:var(--white);padding:1rem 0}
+.wrap{max-width:1200px;margin:0 auto;padding:0 1.5rem}
+.hdr-row{display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:.75rem}
+.hdr-left{display:flex;align-items:center;gap:1rem}
+.hdr-title h1{font-size:1.6rem;font-weight:800;letter-spacing:.3px}
+.hdr-title small{font-size:.8rem;opacity:.75;display:block;margin-top:.15rem}
+.hdr-right{display:flex;align-items:center;gap:1.25rem}
+.hdr-ministry{font-size:.8rem;opacity:.75;text-align:right}
+
+/* Language Selector */
+.lang-selector{position:relative}
+.lang-selector select{
+  background:rgba(255,255,255,.12);border:1px solid rgba(255,255,255,.25);
+  color:var(--white);padding:.45rem .75rem .45rem .45rem;border-radius:6px;
+  font:600 .85rem/1 var(--font-stack);cursor:pointer;
+  appearance:none;-webkit-appearance:none;
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='white' viewBox='0 0 16 16'%3E%3Cpath d='M1.5 5.5l6.5 6 6.5-6'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right .5rem center;
+  padding-right:2rem;min-width:120px;
+  transition:background .2s,border-color .2s
+}
+.lang-selector select:hover{background:rgba(255,255,255,.2);border-color:rgba(255,255,255,.4)}
+.lang-selector select:focus{outline:none;border-color:var(--saffron);box-shadow:0 0 0 2px rgba(255,153,51,.3)}
+.lang-selector select option{background:var(--navy);color:var(--white)}
+
+/* Nav */
+nav{background:var(--navy2);border-bottom:3px solid var(--saffron)}
+.nav-row{display:flex;flex-wrap:wrap}
+.nav-row button{background:none;border:none;color:rgba(255,255,255,.8);padding:.7rem 1.25rem;font:600 .95rem/1 var(--font-stack);cursor:pointer;border-bottom:3px solid transparent;transition:all .2s;white-space:nowrap}
+.nav-row button:hover{color:var(--white);background:rgba(255,255,255,.07)}
+.nav-row button.active{color:var(--white);border-bottom-color:var(--saffron);background:rgba(255,255,255,.05)}
+
+/* Main */
+main{padding:2rem 0 3.5rem}
+.section{display:none}.section.active{display:block}
+
+/* Cards */
+.card{background:var(--card);border:1px solid var(--border);border-radius:var(--radius);padding:1.75rem;margin-bottom:1.25rem;box-shadow:var(--shadow);transition:box-shadow .2s}
+.card:hover{box-shadow:0 4px 16px rgba(0,0,0,.08)}
+.card-title{font-size:1.15rem;font-weight:700;color:var(--navy);border-bottom:3px solid var(--saffron);padding-bottom:.5rem;margin-bottom:1.25rem;letter-spacing:.2px}
+
+/* Stats row */
+.stats{display:grid;grid-template-columns:repeat(auto-fit,minmax(180px,1fr));gap:1rem;margin-bottom:1.5rem}
+.stat-box{background:linear-gradient(135deg,#e8f0fe 0%,#f0f4ff 100%);border:1px solid #b8d4f0;border-radius:var(--radius);padding:1.1rem;text-align:center;transition:transform .2s,box-shadow .2s}
+.stat-box:hover{transform:translateY(-2px);box-shadow:0 4px 12px rgba(0,51,102,.1)}
+.stat-box .num{font-size:2rem;font-weight:800;color:var(--navy);line-height:1.2}
+.stat-box .lbl{font-size:.8rem;color:var(--muted);margin-top:.3rem;font-weight:500}
+
+/* Grid */
+.g2{display:grid;grid-template-columns:1fr 1fr;gap:1rem}
+@media(max-width:700px){.g2{grid-template-columns:1fr}}
+
+/* Form */
+label{display:block;font-size:.9rem;font-weight:600;color:var(--muted);margin-bottom:.3rem}
+input,select,textarea{width:100%;border:1px solid var(--border);padding:.6rem .85rem;border-radius:6px;font:400 .95rem/1.5 var(--font-stack);color:var(--text);background:var(--white);margin-bottom:.85rem;transition:border-color .2s,box-shadow .2s}
+input:focus,select:focus,textarea:focus{outline:none;border-color:var(--navy);box-shadow:0 0 0 3px rgba(0,51,102,.1)}
+.btn{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:var(--white);border:none;padding:.65rem 1.5rem;border-radius:6px;font:700 .95rem/1 var(--font-stack);cursor:pointer;width:100%;transition:all .2s;letter-spacing:.3px}
+.btn:hover{background:linear-gradient(135deg,#004488 0%,var(--navy) 100%);box-shadow:0 2px 8px rgba(0,51,102,.2)}
+.btn:active{transform:scale(.98)}
+.btn-saffron{background:linear-gradient(135deg,var(--saffron) 0%,#e68a00 100%)}.btn-saffron:hover{background:linear-gradient(135deg,#ffaa44 0%,var(--saffron) 100%)}
+.btn-green{background:linear-gradient(135deg,var(--green) 0%,#0f6d06 100%)}.btn-green:hover{background:linear-gradient(135deg,#17a00e 0%,var(--green) 100%)}
+
+/* Table */
+.tbl{width:100%;border-collapse:separate;border-spacing:0;font-size:.9rem;border-radius:var(--radius);overflow:hidden}
+.tbl th{background:var(--navy);color:var(--white);padding:.6rem .75rem;text-align:left;font-weight:600;font-size:.85rem}
+.tbl td{padding:.55rem .75rem;border-bottom:1px solid var(--light)}
+.tbl tr:nth-child(even){background:#f9fafb}
+.tbl tr:hover td{background:var(--blue-light)}
+
+/* Result */
+.result{background:var(--blue-light);border:1px solid #b8d4f0;border-radius:var(--radius);padding:1.25rem;margin-top:1rem;font-size:.95rem;line-height:1.7}
+.result.warn{background:#fff3e0;border-color:#f5c16c}.result.danger{background:#fde8e8;border-color:#f5a3a3}
+.result.ok{background:#e8f5e9;border-color:#a5d6a7}
+.tag{display:inline-block;padding:.2rem .6rem;border-radius:4px;font-size:.78rem;font-weight:700}
+.tag-red{background:#fde8e8;color:var(--red)}.tag-green{background:#e8f5e9;color:var(--green)}.tag-orange{background:#fff3e0;color:var(--orange)}.tag-blue{background:var(--blue-light);color:var(--navy)}
+
+/* Chat */
+.chat-box{height:360px;overflow-y:auto;background:var(--bg);border:1px solid var(--border);border-radius:var(--radius);padding:1rem;margin-bottom:.75rem}
+.msg{margin-bottom:.65rem;padding:.65rem 1rem;border-radius:var(--radius);font-size:.95rem;line-height:1.65;max-width:85%}
+.msg.user{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:var(--white);margin-left:auto;text-align:right;border-bottom-right-radius:2px}
+.msg.bot{background:var(--white);border:1px solid var(--border);border-bottom-left-radius:2px}
+.chat-row{display:flex;gap:.5rem}
+.chat-row input{margin-bottom:0;flex:1}.chat-row .btn{width:auto;padding:.6rem 1.25rem}
+
+/* Alert */
+.alert{padding:.75rem 1rem;border-radius:var(--radius);font-size:.9rem;margin-bottom:1rem;display:flex;align-items:flex-start;gap:.5rem;line-height:1.6}
+.alert-info{background:var(--blue-light);border:1px solid #b8d4f0;color:var(--navy)}
+.alert-success{background:#e8f5e9;border:1px solid #a5d6a7;color:#1b5e20}
+
+/* Footer */
+footer{background:linear-gradient(135deg,var(--navy) 0%,var(--navy2) 100%);color:rgba(255,255,255,.7);padding:1.5rem 0;font-size:.85rem;text-align:center;line-height:1.8}
+footer strong{color:var(--saffron)}
+
+/* Quick links */
+.qlinks{display:flex;gap:.65rem;flex-wrap:wrap;margin-top:.75rem}
+.qlinks button{background:var(--white);border:1px solid var(--border);padding:.55rem 1rem;border-radius:6px;font:600 .9rem var(--font-stack);cursor:pointer;color:var(--navy);transition:all .2s}
+.qlinks button:hover{background:var(--blue-light);border-color:var(--navy);transform:translateY(-1px);box-shadow:0 2px 6px rgba(0,0,0,.08)}
+.loading{color:var(--muted);font-size:.9rem}
+
+/* Map */
+#mapContainer{height:480px;border:1px solid var(--border);border-radius:var(--radius);margin-bottom:1rem;z-index:1}
+.map-controls{display:flex;gap:.5rem;flex-wrap:wrap;margin-bottom:1rem}
+.map-controls button{background:var(--white);border:1px solid var(--border);padding:.45rem .85rem;border-radius:6px;font:600 .85rem var(--font-stack);cursor:pointer;color:var(--navy);transition:all .2s}
+.map-controls button:hover,.map-controls button.active{background:var(--navy);color:var(--white)}
+.road-info-panel{background:linear-gradient(135deg,#e8f0fe 0%,#f0f4ff 100%);border:1px solid #b8d4f0;border-radius:var(--radius);padding:1.25rem;font-size:.95rem}
+.road-info-panel h4{color:var(--navy);margin-bottom:.5rem;font-size:1.05rem}
+.road-info-panel .ri-row{display:flex;justify-content:space-between;padding:.3rem 0;border-bottom:1px solid rgba(0,0,0,.05)}
+.road-info-panel .ri-row:last-child{border:none}
+.road-info-panel .ri-label{color:var(--muted);font-size:.85rem}
+.road-info-panel .ri-value{font-weight:600;font-size:.9rem}
+
+/* Section headings */
+.section-intro{font-size:.95rem;color:var(--muted);margin-bottom:1rem;line-height:1.7}
+
+/* Animations */
+@keyframes fadeIn{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:translateY(0)}}
+.section.active{animation:fadeIn .3s ease-out}
+.stat-box{animation:fadeIn .4s ease-out both}
+.stat-box:nth-child(2){animation-delay:.05s}
+.stat-box:nth-child(3){animation-delay:.1s}
+.stat-box:nth-child(4){animation-delay:.15s}
+.stat-box:nth-child(5){animation-delay:.2s}
+
+/* Responsive */
+@media(max-width:768px){
+  .hdr-row{flex-direction:column;align-items:flex-start}
+  .hdr-right{width:100%;justify-content:space-between}
+  .nav-row{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
+  .nav-row button{flex-shrink:0;font-size:.85rem;padding:.6rem .9rem}
+  .wrap{padding:0 1rem}
+  .card{padding:1.25rem}
+  .stat-box .num{font-size:1.5rem}
+}
+</style>
+</head>
+<body>
+<div class="topband"></div>
+<header><div class="wrap"><div class="hdr-row">
+  <div class="hdr-left">
+    <img src="/static/logo.png" alt="RoadWatch" style="width:48px;height:48px;border-radius:50%;border:2px solid rgba(255,255,255,.3)">
+    <div class="hdr-title"><h1 data-i18n="header.title">RoadWatch AI</h1><small data-i18n="header.subtitle">National Road Safety Hackathon 2026 | CoERS, IIT Madras</small></div>
+  </div>
+  <div class="hdr-right">
+    <div class="lang-selector">
+      <select id="langSelect" aria-label="Select Language" onchange="switchLanguage(this.value)">
+        <option value="en">🌐 English</option>
+        <option value="hi">🇮🇳 हिन्दी</option>
+        <option value="bn">🇮🇳 বাংলা</option>
+        <option value="ta">🇮🇳 தமிழ்</option>
+        <option value="te">🇮🇳 తెలుగు</option>
+        <option value="mr">🇮🇳 मराठी</option>
+      </select>
+    </div>
+    <div class="hdr-ministry"><span data-i18n="header.ministry">Ministry of Road Transport &amp; Highways</span><br><span data-i18n="header.govt">Government of India</span></div>
+  </div>
+</div></div></header>
+
+<nav><div class="wrap"><div class="nav-row" id="navRow">
+  <button class="active" onclick="show('dashboard')" data-i18n="nav.home">Home</button>
+  <button onclick="show('anomaly')" data-i18n="nav.budget_anomaly">Budget Anomaly</button>
+  <button onclick="show('severity')" data-i18n="nav.severity">Severity</button>
+  <button onclick="show('lifecycle')" data-i18n="nav.lifecycle">Lifecycle</button>
+  <button onclick="show('complaint')" data-i18n="nav.file_complaint">File Complaint</button>
+  <button onclick="show('data')" data-i18n="nav.road_data">Road Data</button>
+  <button onclick="show('map')" data-i18n="nav.map_gps">Map &amp; GPS</button>
+  <button onclick="show('chat')" data-i18n="nav.ai_assistant">AI Assistant</button>
+</div></div></nav>
+
+<main><div class="wrap">
+
+<!-- HOME -->
+<div id="dashboard" class="section active">
+  <div class="alert alert-info" data-i18n="dashboard.alert">This platform uses 4 ML models trained on PMGSY/OMMAS data to detect budget anomalies, classify road issues, and predict road lifecycles.</div>
+  <div class="stats" id="statsGrid"><div class="stat-box"><div class="num loading">--</div><div class="lbl">Loading...</div></div></div>
+  <div class="g2">
+    <div class="card">
+      <div class="card-title" data-i18n="dashboard.system_status">System Status</div>
+      <div id="healthInfo" class="loading" data-i18n="dashboard.connecting">Connecting to server...</div>
+    </div>
+    <div class="card">
+      <div class="card-title" data-i18n="dashboard.quick_access">Quick Access</div>
+      <p class="section-intro" data-i18n="dashboard.quick_access_desc">Select a service to get started:</p>
+      <div class="qlinks">
+        <button onclick="show('anomaly')" data-i18n="dashboard.budget_check">Budget Anomaly Check</button>
+        <button onclick="show('complaint')" data-i18n="dashboard.file_complaint_btn">File Complaint</button>
+        <button onclick="show('chat')" data-i18n="dashboard.ask_ai">Ask AI Assistant</button>
+        <button onclick="show('data')" data-i18n="dashboard.view_data">View Road Data</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ANOMALY -->
+<div id="anomaly" class="section">
+  <div class="card">
+    <div class="card-title" data-i18n="anomaly.title">Budget Anomaly Detector</div>
+    <p class="section-intro" data-i18n="anomaly.desc">Cross-references government expenditure against observed road quality to flag potential fund misuse.</p>
+    <div class="g2">
+      <div>
+        <label data-i18n="anomaly.spend_per_km">Expenditure per km (Lakh)</label><input id="a_spend" type="number" value="50" min="0.1" max="500" step="0.1">
+        <label data-i18n="anomaly.road_age">Road Age (months)</label><input id="a_age" type="number" value="24" min="0" max="600">
+        <label data-i18n="anomaly.rainfall">Annual Rainfall (mm)</label><input id="a_rain" type="number" value="1200" min="50" max="5000">
+        <label data-i18n="anomaly.quality_score">Observed Quality Score (0-10)</label><input id="a_quality" type="number" value="5" min="0" max="10" step="0.1">
+      </div>
+      <div>
+        <label data-i18n="anomaly.traffic_class">Traffic Class</label>
+        <select id="a_traffic"><option value="0" data-i18n="anomaly.low">Low</option><option value="1" data-i18n="anomaly.medium">Medium</option><option value="2" data-i18n="anomaly.high">High</option></select>
+        <label data-i18n="anomaly.road_type">Road Type</label>
+        <select id="a_rtype"><option value="0">NH</option><option value="1">SH</option><option value="2">MDR</option><option value="3">ODR</option><option value="4">Village Road</option></select>
+        <label data-i18n="anomaly.maintenance">Maintenance Done?</label>
+        <select id="a_maint"><option value="1" data-i18n="anomaly.yes">Yes</option><option value="0" data-i18n="anomaly.no">No</option></select>
+      </div>
+    </div>
+    <button class="btn" onclick="predictAnomaly()" data-i18n="anomaly.run_analysis">Run Analysis</button>
+    <div id="anomalyResult"></div>
+  </div>
+</div>
+
+<!-- SEVERITY -->
+<div id="severity" class="section">
+  <div class="card">
+    <div class="card-title" data-i18n="severity.title">Complaint Severity Classifier</div>
+    <div class="g2">
+      <div>
+        <label data-i18n="severity.issue_type">Issue Type</label>
+        <select id="s_issue"><option value="0" data-i18n="severity.pothole">Pothole</option><option value="1" data-i18n="severity.crack">Crack</option><option value="2" data-i18n="severity.waterlogging">Waterlogging</option><option value="3" data-i18n="severity.broken_edge">Broken Edge</option><option value="4" data-i18n="severity.missing_signage">Missing Signage</option><option value="5" data-i18n="severity.faded_markings">Faded Markings</option><option value="6" data-i18n="severity.debris">Debris</option></select>
+        <label data-i18n="severity.affected_area">Affected Area (sq.m)</label><input id="s_area" type="number" value="5" min="0.1" max="200" step="0.1">
+        <label data-i18n="severity.num_reports">No. of Reports</label><input id="s_reports" type="number" value="3" min="1" max="500">
+      </div>
+      <div>
+        <label data-i18n="severity.days_repair">Days Since Last Repair</label><input id="s_days" type="number" value="180" min="0" max="3650">
+        <label data-i18n="severity.near_school">Near School?</label><select id="s_school"><option value="0" data-i18n="common.no">No</option><option value="1" data-i18n="common.yes">Yes</option></select>
+        <label data-i18n="severity.near_hospital">Near Hospital?</label><select id="s_hosp"><option value="0" data-i18n="common.no">No</option><option value="1" data-i18n="common.yes">Yes</option></select>
+      </div>
+    </div>
+    <button class="btn" onclick="predictSeverity()" data-i18n="severity.classify">Classify</button>
+    <div id="severityResult"></div>
+  </div>
+</div>
+
+<!-- LIFECYCLE -->
+<div id="lifecycle" class="section">
+  <div class="card">
+    <div class="card-title" data-i18n="lifecycle.title">Road Lifecycle Predictor</div>
+    <div class="g2">
+      <div>
+        <label data-i18n="lifecycle.surface_material">Surface Material</label>
+        <select id="l_mat"><option value="0" data-i18n="lifecycle.bitumen">Bitumen</option><option value="1" data-i18n="lifecycle.concrete">Concrete</option><option value="2" data-i18n="lifecycle.gravel">Gravel</option><option value="3" data-i18n="lifecycle.wbm">WBM</option><option value="4" data-i18n="lifecycle.bm">BM</option></select>
+        <label data-i18n="lifecycle.current_age">Current Age (months)</label><input id="l_age" type="number" value="36" min="0" max="600">
+        <label data-i18n="anomaly.rainfall">Annual Rainfall (mm)</label><input id="l_rain" type="number" value="1200" min="50" max="5000">
+      </div>
+      <div>
+        <label data-i18n="lifecycle.spend_per_km">Expenditure per km (Lakh)</label><input id="l_spend" type="number" value="50" min="0.1" max="500" step="0.1">
+        <label data-i18n="anomaly.traffic_class">Traffic Class</label>
+        <select id="l_traffic"><option value="0" data-i18n="anomaly.low">Low</option><option value="1" data-i18n="anomaly.medium">Medium</option><option value="2" data-i18n="anomaly.high">High</option></select>
+      </div>
+    </div>
+    <button class="btn" onclick="predictLifecycle()" data-i18n="lifecycle.predict">Predict</button>
+    <div id="lifecycleResult"></div>
+  </div>
+</div>
+
+<!-- COMPLAINT -->
+<div id="complaint" class="section">
+  <div class="card">
+    <div class="card-title" data-i18n="complaint.title">File a Road Complaint</div>
+    <div class="alert alert-info" data-i18n="complaint.alert">Your complaint will be auto-classified by severity and routed to the correct authority.</div>
+    <div class="g2">
+      <div>
+        <label data-i18n="complaint.full_name">Full Name *</label><input id="c_name" placeholder="Your name" data-i18n-placeholder="complaint.name_placeholder">
+        <label data-i18n="complaint.phone">Phone Number *</label><input id="c_phone" placeholder="+91XXXXXXXXXX" data-i18n-placeholder="complaint.phone_placeholder">
+        <label data-i18n="complaint.district">District *</label><input id="c_district" value="Chengalpattu">
+        <label data-i18n="complaint.road_name">Road Name *</label><input id="c_road" placeholder="e.g. GST Road NH45" data-i18n-placeholder="complaint.road_placeholder">
+      </div>
+      <div>
+        <label data-i18n="complaint.road_type">Road Type *</label><select id="c_rtype"><option>NH</option><option>SH</option><option>MDR</option><option>ODR</option><option>Village</option></select>
+        <label data-i18n="complaint.issue_type">Issue Type *</label><input id="c_issue" placeholder="e.g. pothole, crack" data-i18n-placeholder="complaint.issue_placeholder">
+        <label data-i18n="complaint.description">Description *</label><textarea id="c_desc" rows="3" placeholder="Describe the road issue in detail..." data-i18n-placeholder="complaint.desc_placeholder"></textarea>
+        <label data-i18n="complaint.near_school">Near School?</label><select id="c_school"><option value="0" data-i18n="common.no">No</option><option value="1" data-i18n="common.yes">Yes</option></select>
+      </div>
+    </div>
+    <button class="btn btn-green" onclick="submitComplaint()" data-i18n="complaint.submit">Submit Complaint</button>
+    <div id="complaintResult"></div>
+  </div>
+</div>
+
+<!-- DATA -->
+<div id="data" class="section">
+  <div class="card"><div class="card-title" data-i18n="data.pmgsy_title">PMGSY Road Data (Chengalpattu)</div><div id="pmgsyData" class="loading" data-i18n="data.loading">Loading data...</div></div>
+  <div class="card"><div class="card-title" data-i18n="data.contractor_title">Contractor Accountability Index</div><div id="contractorData" class="loading" data-i18n="data.loading">Loading data...</div></div>
+</div>
+
+<!-- MAP -->
+<div id="map" class="section">
+  <div class="card">
+    <div class="card-title" data-i18n="map.title">Road Map &amp; GPS Location</div>
+    <div class="alert alert-info" data-i18n="map.alert">Click anywhere on the map or use GPS to auto-detect road name, type, district, and responsible authority. Toggle satellite view for road condition inspection.</div>
+    <div class="map-controls">
+      <button id="btnLocate" onclick="locateGPS()" data-i18n="map.locate_me">Locate Me (GPS)</button>
+      <button id="btnStreet" class="active" onclick="setLayer('street')" data-i18n="map.street_view">Street View</button>
+      <button id="btnSatellite" onclick="setLayer('satellite')" data-i18n="map.satellite_view">Satellite View</button>
+      <button id="btnHybrid" onclick="setLayer('hybrid')" data-i18n="map.hybrid">Hybrid</button>
+    </div>
+    <div id="mapContainer"></div>
+    <div id="mapRoadInfo" class="road-info-panel" style="display:none">
+      <h4 data-i18n="map.road_info">Road Information</h4>
+      <div id="roadInfoContent" data-i18n="map.click_prompt">Click on map or use GPS to identify a road.</div>
+    </div>
+  </div>
+</div>
+
+<!-- CHAT -->
+<div id="chat" class="section">
+  <div class="card">
+    <div class="card-title" data-i18n="chat.title">AI Assistant — Ask About Roads, Authorities &amp; Budgets</div>
+    <div class="chat-box" id="chatBox">
+      <div class="msg bot" data-i18n-html="chat.welcome">Welcome to <b>RoadWatch AI</b>. Ask me about road authorities, budget transparency, PMGSY rules, contractor accountability, or how to file complaints. I can also handle typos!</div>
+    </div>
+    <div class="chat-row">
+      <input id="chatInput" data-i18n-placeholder="chat.placeholder" placeholder="Type your question..." onkeydown="if(event.key==='Enter')sendChat()">
+      <button class="btn" onclick="sendChat()" data-i18n="chat.send">Send</button>
+    </div>
+  </div>
+</div>
+
+</div></main>
+
+<footer><div class="wrap">
+  <strong data-i18n="footer.version">RoadWatch AI v1.0</strong> | <span data-i18n="footer.event">National Road Safety Hackathon 2026 | CoERS, IIT Madras</span><br>
+  <span data-i18n="footer.sources">Data Sources: OMMAS (pmgsy.dord.gov.in) | data.gov.in | OpenStreetMap | No paid APIs used</span>
+</div></footer>
+
+<script>
+// ═══════════════════════════════════════════
+// i18n Engine — RWi18n
+// ═══════════════════════════════════════════
+var RWi18n = (function(){
+  var _locale = 'en';
+  var _cache = {};
+  var _ready = false;
+
+  function _getNestedValue(obj, path) {
+    var parts = path.split('.');
+    var current = obj;
+    for (var i = 0; i < parts.length; i++) {
+      if (current === undefined || current === null) return null;
+      current = current[parts[i]];
+    }
+    return current;
+  }
+
+  function t(key) {
+    var translations = _cache[_locale];
+    if (!translations) return key;
+    var val = _getNestedValue(translations, key);
+    return val !== null && val !== undefined ? val : key;
+  }
+
+  function applyTranslations() {
+    // Text content
+    var els = document.querySelectorAll('[data-i18n]');
+    for (var i = 0; i < els.length; i++) {
+      var key = els[i].getAttribute('data-i18n');
+      var val = t(key);
+      if (val !== key) els[i].textContent = val;
+    }
+    // HTML content (for elements with markup)
+    var htmlEls = document.querySelectorAll('[data-i18n-html]');
+    for (var j = 0; j < htmlEls.length; j++) {
+      var hkey = htmlEls[j].getAttribute('data-i18n-html');
+      var hval = t(hkey);
+      if (hval !== hkey) htmlEls[j].innerHTML = hval;
+    }
+    // Placeholders
+    var phEls = document.querySelectorAll('[data-i18n-placeholder]');
+    for (var k = 0; k < phEls.length; k++) {
+      var pkey = phEls[k].getAttribute('data-i18n-placeholder');
+      var pval = t(pkey);
+      if (pval !== pkey) phEls[k].setAttribute('placeholder', pval);
+    }
+    // Set HTML lang attribute
+    document.documentElement.lang = _locale;
+  }
+
+  function loadLocale(lang, callback) {
+    if (_cache[lang]) {
+      _locale = lang;
+      applyTranslations();
+      if (callback) callback();
+      return;
+    }
+    var xhr = new XMLHttpRequest();
+    xhr.open('GET', '/static/locales/' + lang + '.json', true);
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        try {
+          _cache[lang] = JSON.parse(xhr.responseText);
+          _locale = lang;
+          applyTranslations();
+        } catch(e) {
+          console.warn('i18n: Failed to parse locale', lang, e);
+        }
+      } else {
+        console.warn('i18n: Locale file not found:', lang);
+      }
+      if (callback) callback();
+    };
+    xhr.onerror = function() {
+      console.warn('i18n: Network error loading locale', lang);
+      if (callback) callback();
+    };
+    xhr.send();
+  }
+
+  function init() {
+    var saved = localStorage.getItem('rw_lang');
+    var lang = saved || 'en';
+    var selector = document.getElementById('langSelect');
+    if (selector) selector.value = lang;
+    loadLocale(lang, function() { _ready = true; });
+  }
+
+  function getLocale() { return _locale; }
+
+  return {
+    t: t,
+    loadLocale: loadLocale,
+    applyTranslations: applyTranslations,
+    init: init,
+    getLocale: getLocale
+  };
+})();
+
+function switchLanguage(lang) {
+  localStorage.setItem('rw_lang', lang);
+  RWi18n.loadLocale(lang);
+}
+
+// ═══════════════════════════════════════════
+// Core App Logic
+// ═══════════════════════════════════════════
+var A='';
+function show(id){
+  document.querySelectorAll('.section').forEach(function(s){s.classList.remove('active')});
+  document.getElementById(id).classList.add('active');
+  document.querySelectorAll('.nav-row button').forEach(function(b){b.classList.remove('active')});
+  var btns=document.querySelectorAll('.nav-row button');
+  for(var i=0;i<btns.length;i++){if(btns[i].getAttribute('onclick').indexOf(id)>-1)btns[i].classList.add('active')}
+  if(id==='data')loadData();
+  if(id==='map')initMap();
+}
+function q(id){return document.getElementById(id)}
+function post(url,body){return fetch(A+url,{method:'POST',headers:{'Content-Type':'application/json; charset=utf-8'},body:JSON.stringify(body)}).then(function(r){return r.json()})}
+
+// Dashboard
+(function(){
+  fetch(A+'/api/health').then(function(r){return r.json()}).then(function(h){
+    q('healthInfo').innerHTML='<div style="margin-bottom:.4rem"><span class="tag tag-green">'+RWi18n.t('dashboard.online')+'</span></div>'
+      +'<div style="font-size:.9rem">'+(h.models_loaded?RWi18n.t('dashboard.models_loaded'):RWi18n.t('dashboard.models_not_loaded'))
+      +' | '+RWi18n.t('dashboard.data_files')+': '+h.data_loaded+'</div>';
+  }).catch(function(){q('healthInfo').innerHTML='<span class="tag tag-red">'+RWi18n.t('dashboard.offline')+'</span> Could not reach server'});
+
+  fetch(A+'/api/dashboard/summary').then(function(r){return r.json()}).then(function(s){
+    var items=[
+      {n:s.total_roads_monitored,l:RWi18n.t('dashboard.roads_monitored')},
+      {n:'\u20B9'+s.total_sanctioned_lakh.toLocaleString()+'L',l:RWi18n.t('dashboard.budget_sanctioned')},
+      {n:s.avg_quality_score+'/10',l:RWi18n.t('dashboard.avg_quality')},
+      {n:s.complaints_filed,l:RWi18n.t('dashboard.complaints_filed')},
+      {n:s.contractors_flagged+'/'+s.total_contractors,l:RWi18n.t('dashboard.flagged_contractors')}
+    ];
+    q('statsGrid').innerHTML=items.map(function(x){return '<div class="stat-box"><div class="num">'+x.n+'</div><div class="lbl">'+x.l+'</div></div>'}).join('');
+  }).catch(function(){});
+})();
+
+function predictAnomaly(){
+  var b={spend_per_km_lakh:+q('a_spend').value,road_age_months:+q('a_age').value,rainfall_mm:+q('a_rain').value,traffic_class:+q('a_traffic').value,road_type:+q('a_rtype').value,maintenance_done:+q('a_maint').value,observed_quality:+q('a_quality').value};
+  post('/api/predict/anomaly',b).then(function(r){
+    var cls=r.color==='red'?'danger':r.color==='green'?'ok':'warn';
+    q('anomalyResult').innerHTML='<div class="result '+cls+'"><b>'+r.verdict+'</b> <span class="tag tag-'+r.color+'">'+r.anomaly_probability+'% anomaly probability</span>'
+      +'<br><br>'+RWi18n.t('anomaly.expected_quality')+': '+r.expected_quality+'/10 | '+RWi18n.t('anomaly.observed')+': '+r.observed_quality+'/10 | '+RWi18n.t('anomaly.gap')+': '+r.quality_gap
+      +'<br>'+RWi18n.t('anomaly.road_type')+': '+r.road_type+' | '+RWi18n.t('anomaly.traffic_class')+': '+r.traffic
+      +'<br><br><b>'+RWi18n.t('anomaly.recommendation')+':</b> '+r.recommendation+'</div>';
+  }).catch(function(e){q('anomalyResult').innerHTML='<div class="result danger">Error: '+e.message+'</div>'});
+}
+
+function predictSeverity(){
+  var b={issue_type_enc:+q('s_issue').value,area_sqm:+q('s_area').value,report_count:+q('s_reports').value,days_since_repair:+q('s_days').value,near_school:+q('s_school').value,near_hospital:+q('s_hosp').value};
+  post('/api/predict/severity',b).then(function(r){
+    var c=r.severity_label==='Critical'?'red':r.severity_label==='High'?'orange':r.severity_label==='Medium'?'orange':'green';
+    q('severityResult').innerHTML='<div class="result '+(c==='red'?'danger':c==='green'?'ok':'warn')+'"><b>'+RWi18n.t('severity.title')+': '+r.severity_label+'</b> <span class="tag tag-'+c+'">'+r.confidence+'% confidence</span>'
+      +'<br>'+RWi18n.t('severity.issue_type')+': '+r.issue_type+' | '+RWi18n.t('complaint.expected_resolution')+': '+r.sla+'</div>';
+  }).catch(function(e){q('severityResult').innerHTML='<div class="result danger">Error: '+e.message+'</div>'});
+}
+
+function predictLifecycle(){
+  var b={material_enc:+q('l_mat').value,age_months:+q('l_age').value,rainfall_mm:+q('l_rain').value,spend_per_km:+q('l_spend').value,traffic_class:+q('l_traffic').value};
+  post('/api/predict/lifecycle',b).then(function(r){
+    var cls=r.color==='red'?'danger':r.color==='green'?'ok':'warn';
+    q('lifecycleResult').innerHTML='<div class="result '+cls+'"><b>'+r.urgency+'</b> <span class="tag tag-'+r.color+'">'+r.months_to_failure+' '+RWi18n.t('lifecycle.months_remaining')+'</span>'
+      +'<br>'+RWi18n.t('lifecycle.surface_material')+': '+r.material+' | '+RWi18n.t('anomaly.traffic_class')+': '+r.traffic+' | ~'+r.years_to_failure+' years</div>';
+  }).catch(function(e){q('lifecycleResult').innerHTML='<div class="result danger">Error: '+e.message+'</div>'});
+}
+
+function submitComplaint(){
+  var b={name:q('c_name').value,phone:q('c_phone').value,district:q('c_district').value,road_name:q('c_road').value,road_type:q('c_rtype').value,issue_type:q('c_issue').value,description:q('c_desc').value,area_sqm:1,near_school:+q('c_school').value,near_hospital:0};
+  post('/api/complaints/submit',b).then(function(r){
+    q('complaintResult').innerHTML='<div class="result ok"><b>'+RWi18n.t('complaint.success')+'</b><br><br>'
+      +RWi18n.t('complaint.complaint_id')+': <b>'+r.complaint_id+'</b><br>'+RWi18n.t('severity.title')+': '+r.severity
+      +'<br>'+RWi18n.t('complaint.routed_to')+': '+r.routed_to+'<br>'+RWi18n.t('complaint.officer')+': '+r.officer
+      +'<br>'+RWi18n.t('complaint.helpline')+': '+r.helpline+'<br>'+RWi18n.t('complaint.expected_resolution')+': <b>'+r.expected_resolution+'</b></div>';
+  }).catch(function(e){q('complaintResult').innerHTML='<div class="result danger">'+RWi18n.t('complaint.error')+'</div>'});
+}
+
+function sendChat(){
+  var inp=q('chatInput'),msg=inp.value.trim();if(!msg)return;
+  var box=q('chatBox');
+  var lang=RWi18n.getLocale();
+  box.innerHTML+='<div class="msg user">'+msg.replace(/</g,'&lt;')+'</div>';
+  inp.value='';box.scrollTop=box.scrollHeight;
+  post('/api/chat',{message:msg,lang:lang}).then(function(r){
+    var txt=r.response.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
+    box.innerHTML+='<div class="msg bot">'+txt+'</div>';
+    box.scrollTop=box.scrollHeight;
+  }).catch(function(){box.innerHTML+='<div class="msg bot" style="color:var(--red)">'+RWi18n.t('chat.error')+'</div>'});
+}
+
+function loadData(){
+  fetch(A+'/api/roads/pmgsy').then(function(r){return r.json()}).then(function(p){
+    q('pmgsyData').innerHTML='<div style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Source: '+p.source+' | '+p.total+' roads</div>'
+      +'<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>'+RWi18n.t('data.road_name')+'</th><th>'+RWi18n.t('data.length')+'</th><th>'+RWi18n.t('data.sanctioned')+'</th><th>'+RWi18n.t('data.spent')+'</th><th>'+RWi18n.t('data.quality')+'</th><th>'+RWi18n.t('data.status')+'</th></tr></thead><tbody>'
+      +p.roads.map(function(r){return '<tr><td>'+((r.road_name||'--'))+'</td><td>'+(r.length_km||0)+' km</td><td>\u20B9'+(r.sanctioned_cost_lakh||0)+'L</td><td>\u20B9'+(r.expenditure_lakh||0)+'L</td><td>'+(r.quality_score||'--')+'/10</td><td>'+(r.status||'--')+'</td></tr>'}).join('')
+      +'</tbody></table></div>';
+  }).catch(function(){q('pmgsyData').innerHTML='Error loading road data'});
+
+  fetch(A+'/api/roads/contractors').then(function(r){return r.json()}).then(function(c){
+    q('contractorData').innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>'+RWi18n.t('data.contractor')+'</th><th>'+RWi18n.t('data.roads')+'</th><th>'+RWi18n.t('data.avg_quality')+'</th><th>'+RWi18n.t('data.grade')+'</th><th>'+RWi18n.t('data.flagged')+'</th></tr></thead><tbody>'
+      +c.contractors.map(function(x){var gc=x.grade==='A'?'green':x.grade==='D'?'red':'orange';return '<tr><td>'+x.name+'</td><td>'+(x.total_roads||0)+'</td><td>'+(x.avg_quality||0)+'/10</td><td><span class="tag tag-'+gc+'">Grade '+x.grade+'</span></td><td>'+(x.flag?RWi18n.t('common.yes'):RWi18n.t('common.no'))+'</td></tr>'}).join('')
+      +'</tbody></table></div>';
+  }).catch(function(){q('contractorData').innerHTML='Error loading contractor data'});
+}
+
+// === MAP & GPS ===
+var map,marker,currentLayer,layers={},mapReady=false;
+function initMap(){
+  if(mapReady){map.invalidateSize();return}
+  map=L.map('mapContainer').setView([12.82,80.04],12);
+  layers.street=L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{attribution:'OpenStreetMap',maxZoom:19});
+  layers.satellite=L.tileLayer('https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}',{attribution:'Esri Satellite',maxZoom:19});
+  layers.hybrid=L.layerGroup([layers.satellite,L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png',{opacity:0.4,maxZoom:19})]);
+  layers.street.addTo(map);currentLayer='street';
+  map.on('click',function(e){reverseGeocode(e.latlng.lat,e.latlng.lng)});
+  mapReady=true;
+}
+function setLayer(name){
+  if(!map)return;
+  ['street','satellite','hybrid'].forEach(function(k){if(map.hasLayer(layers[k]))map.removeLayer(layers[k])});
+  layers[name].addTo(map);currentLayer=name;
+  document.querySelectorAll('.map-controls button').forEach(function(b){b.classList.remove('active')});
+  var bid={street:'btnStreet',satellite:'btnSatellite',hybrid:'btnHybrid'};
+  if(bid[name])document.getElementById(bid[name]).classList.add('active');
+}
+function locateGPS(){
+  var btn=document.getElementById('btnLocate');
+  btn.textContent=RWi18n.t('map.locating');
+  if(!navigator.geolocation){btn.textContent=RWi18n.t('map.gps_unavailable');return}
+  navigator.geolocation.getCurrentPosition(function(pos){
+    var lat=pos.coords.latitude,lon=pos.coords.longitude;
+    btn.textContent=RWi18n.t('map.locate_me');
+    if(!mapReady)initMap();
+    map.setView([lat,lon],16);
+    reverseGeocode(lat,lon);
+  },function(err){
+    btn.textContent=RWi18n.t('map.gps_blocked');
+    setTimeout(function(){btn.textContent=RWi18n.t('map.locate_me')},2000);
+  },{enableHighAccuracy:true,timeout:10000});
+}
+function reverseGeocode(lat,lon){
+  if(marker)map.removeLayer(marker);
+  marker=L.marker([lat,lon]).addTo(map);
+  var panel=document.getElementById('mapRoadInfo');
+  var content=document.getElementById('roadInfoContent');
+  panel.style.display='block';
+  content.innerHTML='<span class="loading">'+RWi18n.t('map.identifying')+' '+lat.toFixed(5)+', '+lon.toFixed(5)+'...</span>';
+  fetch(A+'/api/geo/reverse?lat='+lat+'&lon='+lon).then(function(r){return r.json()}).then(function(d){
+    if(d.error){content.innerHTML='<span style="color:var(--red)">Error: '+d.error+'</span>';return}
+    var auth=d.authority||{};
+    var rtColor=d.road_type==='NH'?'blue':d.road_type==='SH'?'green':d.road_type==='Village'?'orange':'navy';
+    content.innerHTML=''
+      +'<div class="ri-row"><span class="ri-label">Road Name</span><span class="ri-value">'+d.road+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Road Type</span><span class="ri-value"><span class="tag tag-'+rtColor+'">'+d.road_type+'</span></span></div>'
+      +'<div class="ri-row"><span class="ri-label">District</span><span class="ri-value">'+d.district+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">State</span><span class="ri-value">'+d.state+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Locality</span><span class="ri-value">'+(d.suburb||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">PIN Code</span><span class="ri-value">'+(d.postcode||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Authority</span><span class="ri-value">'+(auth.authority||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Officer</span><span class="ri-value">'+(auth.officer||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Helpline</span><span class="ri-value">'+(auth.helpline||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Coordinates</span><span class="ri-value">'+lat.toFixed(5)+', '+lon.toFixed(5)+'</span></div>';
+    marker.bindPopup('<b>'+d.road+'</b><br>'+d.road_type+' | '+d.district).openPopup();
+  }).catch(function(e){content.innerHTML='<span style="color:var(--red)">Failed to identify road. Check connection.</span>'});
+}
+
+// Initialize i18n on page load
+document.addEventListener('DOMContentLoaded', function() {
+  RWi18n.init();
+});
+</script>
+</body>
+</html>
