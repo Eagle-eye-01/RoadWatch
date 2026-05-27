@@ -4,12 +4,31 @@ TF-IDF Semantic Search + Intent Detection + Conversation Memory
 Zero external API credits - runs entirely on scikit-learn locally.
 """
 import os, json, re, numpy as np
+import threading
 from collections import defaultdict
 from difflib import get_close_matches
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# ── LLM Integration (AI Context Injection) ──
+# ── Local LLM Integration (RAG) ──
+_pipe = None
+_load_lock = threading.Lock()
+
+def _get_pipeline():
+    global _pipe
+    if _pipe is None:
+        with _load_lock:
+            if _pipe is None:
+                print("Loading local LLM (HuggingFaceTB/SmolLM2-360M-Instruct)...")
+                try:
+                    from transformers import pipeline
+                    _pipe = pipeline("text-generation", model="HuggingFaceTB/SmolLM2-360M-Instruct", device="cpu")
+                    print("LLM loaded successfully!")
+                except Exception as e:
+                    print(f"Failed to load LLM: {e}")
+                    raise
+    return _pipe
+
 def generate_llm_system_prompt(lang: str) -> str:
     """
     Constructs the system prompt wrapper that forces the underlying LLM to not only
@@ -19,55 +38,15 @@ def generate_llm_system_prompt(lang: str) -> str:
     lang_name = lang if lang and lang != 'en' else 'English'
     return f"""You are the RoadWatch AI Assistant, an expert in Indian road safety, infrastructure, and government policies.
 
-Your primary objective is to process the user's semantic intent in their native language ({lang_name}), preserving cultural context, colloquialisms, and regional nuances, rather than performing a direct literal translation.
+Your primary objective is to process the user's semantic intent in their native language ({lang_name}), preserving cultural context, colloquialisms, and regional nuances.
 
 Directives:
 1. Understand the user's intent in {lang_name}. If they use Romanized script (e.g., Hinglish, Tanglish), parse the underlying meaning.
 2. Formulate your response focusing on empathy, clarity, and actionable advice related to road complaints, budget transparency, and contractor accountability.
 3. Use culturally appropriate tone and terminology in {lang_name}.
-4. Return the generated payload entirely in {lang_name} unless English technical terms are strictly necessary (e.g., PMGSY, OMMAS).
-5. Always address the core issue before providing supplementary information.
-
-Knowledge Context available:
-- Road authorities (NHAI, State PWD, Gram Panchayat)
-- Complaint routing and severity SLAs (Critical: 48 hours, Low: 30 days)
-- Budget anomalies (comparing sanctioned cost vs observed quality)
-- PMGSY 5-year maintenance rules and Contractor Accountability Index
+4. Return the generated payload entirely in {lang_name} unless English technical terms are strictly necessary.
+5. Base your answer ONLY on the provided FACTUAL DATA below. DO NOT make up new facts or go off-topic.
 """
-
-def call_llm_api(system_prompt: str, user_message: str, context: dict, authority_map: dict) -> str:
-    """
-    Mock function representing the actual LLM API call (e.g., OpenAI or Gemini).
-    """
-    import requests
-    # In production, replace with actual SDK call (e.g., openai.ChatCompletion)
-    # Using a hypothetical endpoint for demonstration of payload integrity
-    api_key = os.environ.get("LLM_API_KEY")
-    if not api_key:
-        return None # Fallback to local NLP
-
-    payload = {
-        "model": "gpt-4-turbo",
-        "messages": [
-            {"role": "system", "content": system_prompt},
-            {"role": "user", "content": f"Context: {json.dumps(context)}\nAuthorities: {json.dumps(authority_map)}\n\nQuery: {user_message}"}
-        ],
-        "temperature": 0.3
-    }
-    
-    try:
-        # Example of strictly enforcing UTF-8 payload integrity
-        response = requests.post(
-            "https://api.openai.com/v1/chat/completions",
-            headers={"Authorization": f"Bearer {api_key}", "Content-Type": "application/json; charset=utf-8"},
-            data=json.dumps(payload, ensure_ascii=False).encode('utf-8'),
-            timeout=10
-        )
-        if response.status_code == 200:
-            return response.json()["choices"][0]["message"]["content"]
-    except Exception as e:
-        print(f"LLM API Error: {e}")
-    return None
 
 # ── Knowledge Base ──
 KNOWLEDGE = [
@@ -319,132 +298,90 @@ def smart_chat(msg, context=None, session_id="default", authority_map=None, lang
     if not authority_map:
         authority_map = {}
 
-    # ── AI Context Injection (LLM Pipeline) ──
-    # If an LLM API key is present, use the advanced prompt wrapper for deep semantic processing
-    if os.environ.get("LLM_API_KEY"):
-        system_prompt = generate_llm_system_prompt(lang)
-        llm_response = call_llm_api(system_prompt, msg, context or {}, authority_map)
-        if llm_response:
-            return llm_response
-    # Otherwise, fallback to the local TF-IDF + Intent Engine
+    # Step 0a: Native Indic-script detection
+    native_lang, native_topic = _detect_native_script(msg)
+    if native_lang and native_topic:
+        lang = native_lang # override lang if native script is detected
+        
+    # Step 0b: Transliterate Romanized Indic words to English before processing retrieval
+    msg_transliterated = _transliterate_to_english(low)
+    retrieval_query = msg_transliterated if msg_transliterated != low else low
 
-    # Handle follow-ups
-    if any(x in low for x in ["tell me more", "more detail", "explain more", "elaborate", "go on", "continue", "expand"]):
-        if _conv_memory.get(session_id):
-            last_topic = _conv_memory[session_id][-1]
-            entry = _find_by_topic(last_topic)
-            if entry:
-                return f"Sure, let me expand on that:\n\n{entry['answer']}"
-
-    # Handle gratitude
-    if any(x in low for x in ["thank", "thanks", "thx", "appreciate", "helpful", "great answer"]):
-        return "You're welcome! Feel free to ask if you have any other questions about roads, authorities, or complaints. I'm here to help."
-
-    # Handle yes/no
-    if low in ["yes", "yeah", "yep", "sure", "ok", "okay"]:
-        return "Great! What would you like to know more about? You can ask about road authorities, budget transparency, filing complaints, contractor grades, or emergency contacts."
-    if low in ["no", "nope", "nah", "nothing", "no thanks"]:
-        return "Alright! Let me know if you need anything else. I'm always here to help with road-related queries."
-
-    # Location-aware responses
+    # 1. Retrieve the most relevant information using TF-IDF
+    matched_entry, score = _semantic_search(retrieval_query)
+    
+    # 2. Extract Context Information
+    loc_info = ""
     if context and context.get("road"):
         road = context.get("road", "Unknown")
         rtype = context.get("road_type", "Unknown")
         district = context.get("district", "Unknown")
         state = context.get("state", "Unknown")
-        auth = authority_map.get(rtype, {})
-        loc_keywords = ["this road", "my road", "where am i", "current road", "here",
-                        "responsible", "authority", "who", "which road", "what road",
-                        "identify", "my location", "current location"]
-        if any(k in low for k in loc_keywords):
-            resp = f"Based on your GPS location, you are currently on:\n\n"
-            resp += f"**{road}**\n"
-            resp += f"Road Type: **{rtype}**\n"
-            resp += f"District: **{district}**, {state}\n\n"
+        
+        loc_info = f"The user is at: {road}, {district}, {state}. Road Type: {rtype}. "
+        if authority_map:
+            auth = authority_map.get(rtype, {})
             if auth:
-                resp += f"Responsible Authority: **{auth.get('authority', 'N/A')}**\n"
-                resp += f"Officer: {auth.get('officer', 'N/A')}\n"
-                resp += f"Helpline: **{auth.get('helpline', 'N/A')}**\n"
-                resp += f"Portal: {auth.get('portal', 'N/A')}\n\n"
-            if any(x in low for x in ["report", "complain", "defect", "pothole", "issue", "problem"]):
-                resp += f"To report an issue on this road:\n"
-                resp += f"1. Go to the **File Complaint** tab\n"
-                resp += f"2. Your road name and type will be auto-filled from GPS\n"
-                resp += f"3. Our AI classifies severity and routes to {auth.get('officer', 'the correct officer')}\n"
-                resp += f"4. Resolution timeline depends on severity (48 hours to 30 days)"
-            _conv_memory[session_id].append("road_authority")
-            return resp
+                loc_info += f"Authority: {auth.get('authority', 'N/A')}. Helpline: {auth.get('helpline', 'N/A')}."
 
-    # Step 0a: Native Indic-script detection (Devanagari, Bengali, Tamil, Telugu)
-    native_lang, native_topic = _detect_native_script(msg)
-    if native_lang and native_topic:
-        entry = _find_by_topic(native_topic)
-        if entry:
-            _conv_memory[session_id].append(native_topic)
-            lang_prefix = f"(Detected {native_lang} input) "
-            return lang_prefix + entry["answer"]
+    # 3. Create a STRICT prompt based on retrieval
+    system_msg = generate_llm_system_prompt(lang)
+    if matched_entry:
+        system_msg += f"\n\nFACTUAL DATA to base your answer on:\n{matched_entry['answer']}"
+    else:
+        system_msg += (
+            "\n\nThe user asked a query that is not in your database. "
+            "Politely explain that you don't have data on that. "
+            "Briefly explain how they can use the webapp instead (e.g., they can check the Budget Anomaly Tab, Severity Tab, Lifecycle Tab, or File Complaint)."
+        )
 
-    # Step 0b: Transliterate Romanized Indic words to English before processing
-    msg_transliterated = _transliterate_to_english(low)
-    if msg_transliterated != low:
-        low = msg_transliterated
-        msg = msg_transliterated
+    if loc_info:
+        system_msg += f"\n\nContext about user's current location: {loc_info}"
 
-    # Step 1: Intent detection (handles natural phrasing like "who maintains highways?")
-    intent = _detect_intent(msg)
-    if intent:
-        entry = _find_by_topic(intent)
-        if entry:
-            _conv_memory[session_id].append(intent)
-            prefixes = _PREFIXES.get(intent, [""])
-            prefix = prefixes[hash(msg) % len(prefixes)]
-            answer = prefix + entry["answer"]
-            if context and context.get("road"):
-                answer += f"\n\n---\n*Your location: {context['road']} ({context.get('road_type','')}) | {context.get('district','')}*"
-            return answer
+    # Maintain a small conversation history
+    history = _conv_memory[session_id]
+    history.append({"role": "user", "content": msg})
+    
+    # Keep only last 2 turns to keep context very focused and prevent hallucination drift
+    if len(history) > 2:
+        history = history[-2:]
 
-    # Step 2: TF-IDF semantic search (handles paraphrasing and partial matches)
-    corrected = low
-    words = re.split(r'\s+', low)
-    corrections = []
-    for w in words:
-        fix = _fuzzy_match_word(w)
-        if fix and fix != w:
-            corrected = corrected.replace(w, fix, 1)
-            corrections.append((w, fix))
+    # Construct messages array
+    messages = [{"role": "system", "content": system_msg}] + history
 
-    entry_orig, score_orig = _semantic_search(low)
-    entry_corr, score_corr = _semantic_search(corrected) if corrected != low else (None, 0)
-
-    best_entry = None
-    typo_note = ""
-    if score_corr > score_orig and entry_corr:
-        best_entry = entry_corr
-        typo_note = "(I noticed some typos and auto-corrected: " + ", ".join(f'"{o}" to "{f}"' for o, f in corrections) + ")\n\n"
-    elif entry_orig:
-        best_entry = entry_orig
-
-    if best_entry:
-        topic = best_entry.get("topic", "general")
-        _conv_memory[session_id].append(topic)
-        prefixes = _PREFIXES.get(topic, [""])
-        prefix = prefixes[hash(msg) % len(prefixes)]
-        answer = typo_note + prefix + best_entry["answer"]
-        if context and context.get("road"):
-            answer += f"\n\n---\n*Your location: {context['road']} ({context.get('road_type','')}) | {context.get('district','')}*"
-        return answer
-
-    # Step 3: Nothing matched
-    fallback = ("I wasn't able to find specific information for that query, but I'd love to help!\n\n"
-            "Here are some things you can ask me about:\n"
-            "- **Road authorities** - \"Who is responsible for NH roads?\"\n"
-            "- **Filing complaints** - \"How do I report a pothole?\"\n"
-            "- **Budget transparency** - \"How is road money spent?\"\n"
-            "- **Contractor accountability** - \"What are contractor grades?\"\n"
-            "- **Emergency contacts** - \"What's the NHAI helpline?\"\n"
-            "- **PMGSY rules** - \"What is the 5-year maintenance rule?\"\n"
-            "- **RTI filing** - \"How to file RTI for road data?\"\n\n"
-            "You can also try rephrasing your question, or ask me something more specific!")
-    if lang and lang != 'en':
-        fallback = f"[Language: {lang}] " + fallback
-    return fallback
+    try:
+        pipe = _get_pipeline()
+        # Generate response using transformers
+        result = pipe(
+            messages, 
+            max_new_tokens=200, 
+            do_sample=True, 
+            temperature=0.3, # Low temp prevents hallucination
+            top_p=0.9,
+            repetition_penalty=1.1,
+            pad_token_id=pipe.tokenizer.eos_token_id
+        )
+        
+        # Extract the assistant's reply
+        generated = result[0]['generated_text']
+        reply = generated[-1]['content'] if isinstance(generated, list) else generated
+        
+        # Save assistant reply to history
+        history.append({"role": "assistant", "content": reply})
+        _conv_memory[session_id] = history
+        return reply
+    except Exception as e:
+        print(f"LLM Error: {e}")
+        # Remove the failed user message from history
+        if _conv_memory[session_id] and _conv_memory[session_id][-1]["role"] == "user":
+            _conv_memory[session_id].pop()
+        
+        # Fallback to pure retrieval logic if LLM fails
+        if matched_entry:
+            fallback = matched_entry["answer"]
+        else:
+            fallback = "I'm sorry, I wasn't able to find specific information for that query. I'm also having trouble connecting to my language model right now. Could you try asking about road authorities, budget transparency, filing complaints, or emergency contacts?"
+            
+        if lang and lang != 'en':
+            fallback = f"[Language: {lang}] " + fallback
+        return fallback
