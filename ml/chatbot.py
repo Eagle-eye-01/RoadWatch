@@ -29,13 +29,22 @@ def _get_pipeline():
                     raise
     return _pipe
 
+LANG_MAP = {
+    'hi': 'Hindi',
+    'bn': 'Bengali',
+    'ta': 'Tamil',
+    'te': 'Telugu',
+    'mr': 'Marathi',
+    'en': 'English'
+}
+
 def generate_llm_system_prompt(lang: str) -> str:
     """
     Constructs the system prompt wrapper that forces the underlying LLM to not only
     translate but process the semantic intent in the native language, preserving
     cultural context and colloquialisms before returning the generated payload.
     """
-    lang_name = lang if lang and lang != 'en' else 'English'
+    lang_name = LANG_MAP.get(lang, lang if lang else 'English')
     return f"""You are the RoadWatch AI Assistant, an expert in Indian road safety, infrastructure, and government policies.
 
 Your primary objective is to process the user's semantic intent in their native language ({lang_name}), preserving cultural context, colloquialisms, and regional nuances.
