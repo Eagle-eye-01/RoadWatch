@@ -9,6 +9,8 @@
 <title>RoadWatch AI | Road Quality Monitor</title>
 <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css">
 <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+<link rel="manifest" href="/static/manifest.json">
+<meta name="theme-color" content="#003366">
 <!-- Google Fonts: Noto Sans family for Indic script rendering -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -629,6 +631,10 @@ function reverseGeocode(lat,lon){
       +'<div class="ri-row"><span class="ri-label">Road Type</span><span class="ri-value"><span class="tag tag-'+rtColor+'">'+d.road_type+'</span></span></div>'
       +'<div class="ri-row"><span class="ri-label">District</span><span class="ri-value">'+d.district+'</span></div>'
       +'<div class="ri-row"><span class="ri-label">State</span><span class="ri-value">'+d.state+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Contractor</span><span class="ri-value">'+(d.contractor||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Last Repaired</span><span class="ri-value">'+(d.last_repaired||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Sanctioned</span><span class="ri-value">'+(d.sanctioned||'--')+'</span></div>'
+      +'<div class="ri-row"><span class="ri-label">Spent</span><span class="ri-value">'+(d.spent||'--')+'</span></div>'
       +'<div class="ri-row"><span class="ri-label">Locality</span><span class="ri-value">'+(d.suburb||'--')+'</span></div>'
       +'<div class="ri-row"><span class="ri-label">PIN Code</span><span class="ri-value">'+(d.postcode||'--')+'</span></div>'
       +'<div class="ri-row"><span class="ri-label">Authority</span><span class="ri-value">'+(auth.authority||'--')+'</span></div>'
@@ -643,6 +649,17 @@ function reverseGeocode(lat,lon){
 document.addEventListener('DOMContentLoaded', function() {
   RWi18n.init();
 });
+
+// PWA Service Worker Registration
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/static/sw.js').then(function(registration) {
+      console.log('ServiceWorker registration successful with scope: ', registration.scope);
+    }, function(err) {
+      console.log('ServiceWorker registration failed: ', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
