@@ -35,7 +35,15 @@ def call_llm_api(messages):
         
         result = response.json()
         if "choices" in result and len(result["choices"]) > 0:
-            return result["choices"][0]["message"]["content"].strip()
+            content = result["choices"][0]["message"]["content"].strip()
+            # Strip Pollinations AI ads
+            if "🌸 Ad 🌸" in content:
+                content = content.split("🌸 Ad 🌸")[0].strip()
+            if "Support Pollinations.AI:" in content:
+                content = content.split("Support Pollinations.AI:")[0].strip()
+            while content.endswith("---") or content.endswith("..."):
+                content = content.rstrip(".- ").strip()
+            return content
         else:
             raise Exception("Unexpected API response format.")
     except Exception as e:
