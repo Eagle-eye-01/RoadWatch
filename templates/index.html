@@ -164,13 +164,79 @@ footer strong{color:var(--saffron)}
 
 /* Responsive */
 @media(max-width:768px){
-  .hdr-row{flex-direction:column;align-items:flex-start}
+  body{font-size:15px}
+  main{padding:1rem 0 2rem}
+
+  /* Header */
+  .hdr-row{flex-direction:column;align-items:flex-start;gap:.5rem}
+  .hdr-left{gap:.65rem}
+  .hdr-left img{width:36px!important;height:36px!important}
+  .hdr-title h1{font-size:1.2rem}
+  .hdr-title small{font-size:.7rem}
   .hdr-right{width:100%;justify-content:space-between}
-  .nav-row{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch}
-  .nav-row button{flex-shrink:0;font-size:.85rem;padding:.6rem .9rem}
-  .wrap{padding:0 1rem}
-  .card{padding:1.25rem}
-  .stat-box .num{font-size:1.5rem}
+  .hdr-ministry{font-size:.7rem}
+  .lang-selector select{min-width:100px;font-size:.8rem;padding:.35rem .6rem .35rem .4rem}
+
+  /* Nav - horizontal scroll */
+  .nav-row{overflow-x:auto;flex-wrap:nowrap;-webkit-overflow-scrolling:touch;scrollbar-width:none;-ms-overflow-style:none}
+  .nav-row::-webkit-scrollbar{display:none}
+  .nav-row button{flex-shrink:0;font-size:.8rem;padding:.55rem .75rem;white-space:nowrap}
+
+  /* Layout */
+  .wrap{padding:0 .75rem}
+  .g2{grid-template-columns:1fr}
+  .card{padding:1rem;margin-bottom:.75rem;border-radius:6px}
+  .card-title{font-size:1rem;padding-bottom:.4rem;margin-bottom:.85rem}
+
+  /* Stats */
+  .stats{grid-template-columns:repeat(2,1fr);gap:.6rem}
+  .stat-box{padding:.75rem}
+  .stat-box .num{font-size:1.4rem}
+  .stat-box .lbl{font-size:.72rem}
+
+  /* Forms */
+  label{font-size:.82rem;margin-bottom:.2rem}
+  input,select,textarea{font-size:.9rem;padding:.5rem .7rem;margin-bottom:.65rem}
+  .btn{padding:.6rem 1rem;font-size:.9rem}
+
+  /* Tables */
+  .tbl{font-size:.78rem}
+  .tbl th,.tbl td{padding:.4rem .5rem}
+
+  /* Chat */
+  .chat-box{height:50vh;min-height:300px;max-height:450px;padding:.85rem;border-radius:8px}
+  .msg{max-width:88%;font-size:.9rem;padding:.6rem .85rem;margin-bottom:.65rem}
+  .chat-row{gap:.5rem}
+  .chat-row input{padding:.7rem 1rem;font-size:.9rem;border-radius:24px}
+  .chat-row .btn{padding:.7rem 1.25rem;font-size:.9rem;border-radius:24px}
+
+  /* Map */
+  #mapContainer{height:320px}
+  .map-controls{gap:.35rem}
+  .map-controls button{font-size:.78rem;padding:.35rem .6rem}
+  .road-info-panel{padding:.85rem;font-size:.85rem}
+  .road-info-panel .ri-label,.road-info-panel .ri-value{font-size:.8rem}
+
+  /* Quick links */
+  .qlinks{gap:.4rem}
+  .qlinks button{font-size:.8rem;padding:.45rem .75rem}
+
+  /* Alerts */
+  .alert{font-size:.82rem;padding:.6rem .75rem}
+
+  /* Footer */
+  footer{font-size:.78rem;padding:1rem 0;line-height:1.6}
+}
+
+/* Small phones (max 400px) */
+@media(max-width:400px){
+  .wrap{padding:0 .5rem}
+  .stats{grid-template-columns:1fr 1fr;gap:.4rem}
+  .stat-box .num{font-size:1.2rem}
+  .msg{max-width:92%}
+  .hdr-title h1{font-size:1.05rem}
+  .nav-row button{font-size:.75rem;padding:.5rem .6rem}
+  #mapContainer{height:260px}
 }
 </style>
 </head>
