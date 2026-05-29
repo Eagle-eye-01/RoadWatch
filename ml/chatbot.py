@@ -11,11 +11,25 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ── Local LLM Integration (RAG) ──
-_pipe = None
-_load_lock = threading.Lock()
+import requests
 
-def _get_pipeline():
-    raise Exception("Disabled LLM to prevent OOM on Render Free Tier. Using TF-IDF fallback instead.")
+def call_hf_api(messages):
+    api_url = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM2-360M-Instruct/v1/chat/completions"
+    headers = {"Content-Type": "application/json"}
+    token = os.environ.get("HF_TOKEN")
+    if token:
+        headers["Authorization"] = f"Bearer {token}"
+    
+    payload = {
+        "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
+        "messages": messages,
+        "max_tokens": 200,
+        "temperature": 0.3
+    }
+    
+    response = requests.post(api_url, headers=headers, json=payload, timeout=15)
+    response.raise_for_status()
+    return response.json()["choices"][0]["message"]["content"]
 
 LANG_MAP = {
     'hi': 'Hindi',
@@ -347,21 +361,8 @@ def smart_chat(msg, context=None, session_id="default", authority_map=None, lang
     messages = [{"role": "system", "content": system_msg}] + history
 
     try:
-        pipe = _get_pipeline()
-        # Generate response using transformers
-        result = pipe(
-            messages, 
-            max_new_tokens=200, 
-            do_sample=True, 
-            temperature=0.3, # Low temp prevents hallucination
-            top_p=0.9,
-            repetition_penalty=1.1,
-            pad_token_id=pipe.tokenizer.eos_token_id
-        )
-        
-        # Extract the assistant's reply
-        generated = result[0]['generated_text']
-        reply = generated[-1]['content'] if isinstance(generated, list) else generated
+        # Generate response using Hugging Face API
+        reply = call_hf_api(messages)
         
         # Save assistant reply to history
         history.append({"role": "assistant", "content": reply})
