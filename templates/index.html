@@ -654,13 +654,13 @@ function loadData(){
   fetch(A+'/api/roads/pmgsy').then(function(r){return r.json()}).then(function(p){
     q('pmgsyData').innerHTML='<div style="font-size:.85rem;color:var(--muted);margin-bottom:.5rem">Source: '+p.source+' | '+p.total+' roads</div>'
       +'<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>'+RWi18n.t('data.road_name')+'</th><th>'+RWi18n.t('data.length')+'</th><th>'+RWi18n.t('data.sanctioned')+'</th><th>'+RWi18n.t('data.spent')+'</th><th>'+RWi18n.t('data.quality')+'</th><th>'+RWi18n.t('data.status')+'</th></tr></thead><tbody>'
-      +p.roads.map(function(r){return '<tr><td>'+((r.road_name||'--'))+'</td><td>'+(r.length_km||0)+' km</td><td>\u20B9'+(r.sanctioned_cost_lakh||0)+'L</td><td>\u20B9'+(r.expenditure_lakh||0)+'L</td><td>'+(r.quality_score||'--')+'/10</td><td>'+(r.status||'--')+'</td></tr>'}).join('')
+      +p.roads.map(function(r){return '<tr><td>'+((r.name||'--'))+'</td><td>'+(r.length_km||0)+' km</td><td>\u20B9'+(r.sanctioned_cost_lakh||0)+'L</td><td>\u20B9'+(r.expenditure_lakh||0)+'L</td><td>'+(r.quality_score||'--')+'/10</td><td>'+(r.status||'--')+'</td></tr>'}).join('')
       +'</tbody></table></div>';
   }).catch(function(){q('pmgsyData').innerHTML='Error loading road data'});
 
   fetch(A+'/api/roads/contractors').then(function(r){return r.json()}).then(function(c){
     q('contractorData').innerHTML='<div style="overflow-x:auto"><table class="tbl"><thead><tr><th>'+RWi18n.t('data.contractor')+'</th><th>'+RWi18n.t('data.roads')+'</th><th>'+RWi18n.t('data.avg_quality')+'</th><th>'+RWi18n.t('data.grade')+'</th><th>'+RWi18n.t('data.flagged')+'</th></tr></thead><tbody>'
-      +c.contractors.map(function(x){var gc=x.grade==='A'?'green':x.grade==='D'?'red':'orange';return '<tr><td>'+x.name+'</td><td>'+(x.total_roads||0)+'</td><td>'+(x.avg_quality||0)+'/10</td><td><span class="tag tag-'+gc+'">Grade '+x.grade+'</span></td><td>'+(x.flag?RWi18n.t('common.yes'):RWi18n.t('common.no'))+'</td></tr>'}).join('')
+      +c.contractors.map(function(x){var gc=x.grade==='A'?'green':x.grade==='D'?'red':'orange';return '<tr><td>'+x.name+'</td><td>'+(x.roads_completed||0)+'</td><td>'+(x.avg_quality||0)+'/10</td><td><span class="tag tag-'+gc+'">Grade '+x.grade+'</span></td><td>'+(x.flag?RWi18n.t('common.yes'):RWi18n.t('common.no'))+'</td></tr>'}).join('')
       +'</tbody></table></div>';
   }).catch(function(){q('contractorData').innerHTML='Error loading contractor data'});
 }
