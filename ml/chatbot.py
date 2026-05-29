@@ -351,9 +351,9 @@ def smart_chat(msg, context=None, session_id="default", authority_map=None, lang
         system_msg += f"\n\nFACTUAL DATA to base your answer on:\n{matched_entry['answer']}"
     else:
         system_msg += (
-            "\n\nThe user asked a query that is not in your database. "
-            "Politely explain that you don't have data on that. "
-            "Briefly explain how they can use the webapp instead (e.g., they can check the Budget Anomaly Tab, Severity Tab, Lifecycle Tab, or File Complaint)."
+            "\n\nThe user asked a query about a specific road or topic not in your local database. "
+            "Instead of refusing, please answer their question using your extensive general knowledge about Indian roads, highways, and infrastructure. "
+            "If appropriate, you can also politely remind them they can check the RoadWatch web-app for real-time anomaly data."
         )
 
     if loc_info:
