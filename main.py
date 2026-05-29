@@ -330,11 +330,14 @@ async def predict_lifecycle(req: LifecycleReq, request: Request):
     return {"months_to_failure":round(pred,1),"years_to_failure":round(years,1),"urgency":urgency,"color":color,"material":MATERIAL_NAMES[req.material_enc],"traffic":TRAFFIC_NAMES[req.traffic_class]}
 
 @app.get("/api/roads/pmgsy")
-async def get_pmgsy(district: str = "Chengalpattu"):
+async def get_pmgsy(district: Optional[str] = None):
     d = data_store.get("pmgsy_roads", {})
     roads = d.get("roads", [])
-    filtered = [r for r in roads if r.get("district","").lower() == district.lower()] or roads
-    return {"source":d.get("source","OMMAS — pmgsy.dord.gov.in"),"retrieved":d.get("retrieved",""),"district":district,"total":len(filtered),"roads":filtered}
+    if district:
+        filtered = [r for r in roads if r.get("district","").lower() == district.lower()] or roads
+    else:
+        filtered = roads
+    return {"source":d.get("source","OMMAS — pmgsy.dord.gov.in"),"retrieved":d.get("retrieved",""),"district":district or "Pan-India","total":len(filtered),"roads":filtered}
 
 @app.get("/api/roads/contractors")
 async def get_contractors():
