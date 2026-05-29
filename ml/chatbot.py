@@ -15,19 +15,7 @@ _pipe = None
 _load_lock = threading.Lock()
 
 def _get_pipeline():
-    global _pipe
-    if _pipe is None:
-        with _load_lock:
-            if _pipe is None:
-                print("Loading local LLM (HuggingFaceTB/SmolLM2-360M-Instruct)...")
-                try:
-                    from transformers import pipeline
-                    _pipe = pipeline("text-generation", model="HuggingFaceTB/SmolLM2-360M-Instruct", device="cpu")
-                    print("LLM loaded successfully!")
-                except Exception as e:
-                    print(f"Failed to load LLM: {e}")
-                    raise
-    return _pipe
+    raise Exception("Disabled LLM to prevent OOM on Render Free Tier. Using TF-IDF fallback instead.")
 
 LANG_MAP = {
     'hi': 'Hindi',
