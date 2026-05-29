@@ -11,43 +11,57 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 # ── Local LLM Integration (RAG) ──
-import requests
-import time
 import os
+try:
+    import torch
+    from transformers import AutoModelForCausalLM, AutoTokenizer
+    HAS_LOCAL_LLM = True
+except ImportError:
+    HAS_LOCAL_LLM = False
+
+_local_tokenizer = None
+_local_model = None
+_device = None
+
+def load_local_llm():
+    global _local_tokenizer, _local_model, _device
+    if not HAS_LOCAL_LLM:
+        raise Exception("torch and transformers are not installed. Cannot load local LLM.")
+        
+    if _local_model is None:
+        _device = "cuda" if torch.cuda.is_available() else "cpu"
+        model_id = "HuggingFaceTB/SmolLM2-360M-Instruct"
+        print(f"[*] Loading Local LLM: {model_id} on {_device}...")
+        _local_tokenizer = AutoTokenizer.from_pretrained(model_id)
+        _local_model = AutoModelForCausalLM.from_pretrained(
+            model_id,
+            torch_dtype=torch.float32 if _device == "cpu" else torch.float16,
+            low_cpu_mem_usage=True
+        ).to(_device)
+        print("[*] Local LLM loaded successfully.")
 
 def call_llm_api(messages):
     """
-    Uses the free Pollinations AI text endpoint which has no cold-starts,
-    requires no API key, and perfectly handles OpenAI-formatted messages.
+    Uses the local SmolLM2 model for completely offline, privacy-first inference.
     """
-    api_url = "https://text.pollinations.ai/openai"
-    headers = {"Content-Type": "application/json"}
+    load_local_llm()
+    prompt = _local_tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
+    inputs = _local_tokenizer(prompt, return_tensors="pt").to(_device)
     
-    payload = {
-        "messages": messages,
-        "model": "openai", # Will route to a fast, capable model
-        "temperature": 0.3
-    }
+    with torch.no_grad():
+        outputs = _local_model.generate(
+            **inputs, 
+            max_new_tokens=300, 
+            temperature=0.3,
+            do_sample=True,
+            pad_token_id=_local_tokenizer.eos_token_id
+        )
     
-    try:
-        response = requests.post(api_url, headers=headers, json=payload, timeout=20)
-        response.raise_for_status()
-        
-        result = response.json()
-        if "choices" in result and len(result["choices"]) > 0:
-            content = result["choices"][0]["message"]["content"].strip()
-            # Strip Pollinations AI ads
-            if "🌸 Ad 🌸" in content:
-                content = content.split("🌸 Ad 🌸")[0].strip()
-            if "Support Pollinations.AI:" in content:
-                content = content.split("Support Pollinations.AI:")[0].strip()
-            while content.endswith("---") or content.endswith("..."):
-                content = content.rstrip(".- ").strip()
-            return content
-        else:
-            raise Exception("Unexpected API response format.")
-    except Exception as e:
-        raise Exception(f"Pollinations API Error: {str(e)}")
+    # Extract only the newly generated text
+    input_length = inputs.input_ids.shape[1]
+    generated_tokens = outputs[0][input_length:]
+    content = _local_tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
+    return content
 
 LANG_MAP = {
     'hi': 'Hindi',
