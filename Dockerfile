@@ -21,5 +21,5 @@ COPY . .
 # Expose port (Render uses 10000 by default, but we can set uvicorn to 8000 and Render will detect it if we expose it)
 EXPOSE 8000
 
-# Command to run the application
-CMD ["uvicorn", "main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Command to run the application using Render's PORT environment variable
+CMD uvicorn main:app --host 0.0.0.0 --port ${PORT:-8000}
