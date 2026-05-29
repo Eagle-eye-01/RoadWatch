@@ -10,58 +10,23 @@ from difflib import get_close_matches
 from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
-# ── Local LLM Integration (RAG) ──
-import os
-try:
-    import torch
-    from transformers import AutoModelForCausalLM, AutoTokenizer
-    HAS_LOCAL_LLM = True
-except ImportError:
-    HAS_LOCAL_LLM = False
+import requests
 
-_local_tokenizer = None
-_local_model = None
-_device = None
-
-def load_local_llm():
-    global _local_tokenizer, _local_model, _device
-    if not HAS_LOCAL_LLM:
-        raise Exception("torch and transformers are not installed. Cannot load local LLM.")
-        
-    if _local_model is None:
-        _device = "cuda" if torch.cuda.is_available() else "cpu"
-        model_id = "HuggingFaceTB/SmolLM2-360M-Instruct"
-        print(f"[*] Loading Local LLM: {model_id} on {_device}...")
-        _local_tokenizer = AutoTokenizer.from_pretrained(model_id)
-        _local_model = AutoModelForCausalLM.from_pretrained(
-            model_id,
-            torch_dtype=torch.float32 if _device == "cpu" else torch.float16,
-            low_cpu_mem_usage=True
-        ).to(_device)
-        print("[*] Local LLM loaded successfully.")
-
+# ── Local LLM Integration (Decoupled to Hugging Face Space) ──
 def call_llm_api(messages):
     """
-    Uses the local SmolLM2 model for completely offline, privacy-first inference.
+    Calls the decoupled Hugging Face Space microservice to generate the response.
+    Expects LLM_API_URL environment variable (defaulting to localhost for local testing).
     """
-    load_local_llm()
-    prompt = _local_tokenizer.apply_chat_template(messages, tokenize=False, add_generation_prompt=True)
-    inputs = _local_tokenizer(prompt, return_tensors="pt").to(_device)
+    api_url = os.environ.get("LLM_API_URL", "http://127.0.0.1:7860/generate")
     
-    with torch.no_grad():
-        outputs = _local_model.generate(
-            **inputs, 
-            max_new_tokens=300, 
-            temperature=0.3,
-            do_sample=True,
-            pad_token_id=_local_tokenizer.eos_token_id
-        )
-    
-    # Extract only the newly generated text
-    input_length = inputs.input_ids.shape[1]
-    generated_tokens = outputs[0][input_length:]
-    content = _local_tokenizer.decode(generated_tokens, skip_special_tokens=True).strip()
-    return content
+    try:
+        response = requests.post(api_url, json={"messages": messages}, timeout=60)
+        response.raise_for_status()
+        return response.json().get("reply", "")
+    except Exception as e:
+        print(f"[*] Failed to connect to LLM Microservice at {api_url}: {e}")
+        raise e
 
 LANG_MAP = {
     'hi': 'Hindi',
