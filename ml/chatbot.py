@@ -12,24 +12,34 @@ from sklearn.metrics.pairwise import cosine_similarity
 
 # ── Local LLM Integration (RAG) ──
 import requests
+import time
+import os
 
-def call_hf_api(messages):
-    api_url = "https://api-inference.huggingface.co/models/HuggingFaceTB/SmolLM2-360M-Instruct/v1/chat/completions"
+def call_llm_api(messages):
+    """
+    Uses the free Pollinations AI text endpoint which has no cold-starts,
+    requires no API key, and perfectly handles OpenAI-formatted messages.
+    """
+    api_url = "https://text.pollinations.ai/openai"
     headers = {"Content-Type": "application/json"}
-    token = os.environ.get("HF_TOKEN")
-    if token:
-        headers["Authorization"] = f"Bearer {token}"
     
     payload = {
-        "model": "HuggingFaceTB/SmolLM2-360M-Instruct",
         "messages": messages,
-        "max_tokens": 200,
+        "model": "openai", # Will route to a fast, capable model
         "temperature": 0.3
     }
     
-    response = requests.post(api_url, headers=headers, json=payload, timeout=15)
-    response.raise_for_status()
-    return response.json()["choices"][0]["message"]["content"]
+    try:
+        response = requests.post(api_url, headers=headers, json=payload, timeout=20)
+        response.raise_for_status()
+        
+        result = response.json()
+        if "choices" in result and len(result["choices"]) > 0:
+            return result["choices"][0]["message"]["content"].strip()
+        else:
+            raise Exception("Unexpected API response format.")
+    except Exception as e:
+        raise Exception(f"Pollinations API Error: {str(e)}")
 
 LANG_MAP = {
     'hi': 'Hindi',
@@ -361,8 +371,8 @@ def smart_chat(msg, context=None, session_id="default", authority_map=None, lang
     messages = [{"role": "system", "content": system_msg}] + history
 
     try:
-        # Generate response using Hugging Face API
-        reply = call_hf_api(messages)
+        # Generate response using LLM API
+        reply = call_llm_api(messages)
         
         # Save assistant reply to history
         history.append({"role": "assistant", "content": reply})
