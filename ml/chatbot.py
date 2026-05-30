@@ -22,7 +22,7 @@ def call_llm_api(messages):
     Calls the decoupled Hugging Face Space microservice to generate the response.
     Expects LLM_API_URL environment variable (defaulting to localhost for local testing).
     """
-    api_url = os.environ.get("LLM_API_URL", "http://127.0.0.1:7860/generate")
+    api_url = os.environ.get("LLM_API_URL", "https://eagle-eye-01-roadwatch-llm.hf.space/generate")
     
     try:
         response = requests.post(api_url, json={"messages": messages}, timeout=60)
