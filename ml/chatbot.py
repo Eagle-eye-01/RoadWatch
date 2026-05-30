@@ -25,7 +25,7 @@ def call_llm_api(messages):
     api_url = os.environ.get("LLM_API_URL", "https://eagle-eye-01-roadwatch-llm.hf.space/generate")
     
     try:
-        response = requests.post(api_url, json={"messages": messages}, timeout=60)
+        response = requests.post(api_url, json={"messages": messages}, timeout=180)
         response.raise_for_status()
         return response.json().get("reply", "")
     except Exception as e:
