@@ -628,8 +628,23 @@ function sendChat(){
   inp.value='';
   
   var loaderId = 'loader_' + Date.now();
-  box.innerHTML+='<div class="msg bot" id="'+loaderId+'"><div class="typing-loader"><span></span><span></span><span></span></div></div>';
+  box.innerHTML+='<div class="msg bot" id="'+loaderId+'"><div class="typing-loader" style="margin-bottom:8px"><span></span><span></span><span></span></div><div id="'+loaderId+'_text" style="font-size:0.85em; color:gray">Thinking...</div></div>';
   box.scrollTop=box.scrollHeight;
+  
+  var startTime = Date.now();
+  var timerInterval = setInterval(function() {
+    var elapsed = Math.floor((Date.now() - startTime) / 1000);
+    var textEl = document.getElementById(loaderId + '_text');
+    if (textEl) {
+      if (elapsed > 5) {
+        textEl.innerHTML = "Waking up AI model... (" + elapsed + "s elapsed)<br><span style='font-size:0.9em; opacity:0.8'>If this is the first message in a while, the Hugging Face server might take up to 2-3 minutes to load the 1.7B parameter model into memory.</span>";
+      } else {
+        textEl.innerHTML = "Thinking... (" + elapsed + "s elapsed)";
+      }
+    } else {
+      clearInterval(timerInterval);
+    }
+  }, 1000);
   
   var payload = {message:msg, lang:lang};
   if(window.currentLocation) {
@@ -637,12 +652,14 @@ function sendChat(){
   }
 
   post('/api/chat', payload).then(function(r){
+    clearInterval(timerInterval);
     var loader = document.getElementById(loaderId);
     if(loader) loader.remove();
     var txt=r.response.replace(/\n/g,'<br>').replace(/\*\*(.*?)\*\*/g,'<b>$1</b>');
     box.innerHTML+='<div class="msg bot">'+txt+'</div>';
     box.scrollTop=box.scrollHeight;
   }).catch(function(){
+    clearInterval(timerInterval);
     var loader = document.getElementById(loaderId);
     if(loader) loader.remove();
     box.innerHTML+='<div class="msg bot" style="color:var(--red)">'+RWi18n.t('chat.error')+'</div>';
