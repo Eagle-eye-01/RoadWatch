@@ -11,6 +11,10 @@ from sklearn.feature_extraction.text import TfidfVectorizer
 from sklearn.metrics.pairwise import cosine_similarity
 
 import requests
+try:
+    from duckduckgo_search import DDGS
+except ImportError:
+    DDGS = None
 
 # ── Local LLM Integration (Decoupled to Hugging Face Space) ──
 def call_llm_api(messages):
@@ -337,11 +341,27 @@ def smart_chat(msg, context=None, session_id="default", authority_map=None, lang
     if matched_entry:
         system_msg += f"\n\nFACTUAL DATA to base your answer on:\n{matched_entry['answer']}"
     else:
-        system_msg += (
-            "\n\nThe user asked a query about a specific road or topic not in your local database. "
-            "Instead of refusing, please answer their question using your extensive general knowledge about Indian roads, highways, and infrastructure. "
-            "If appropriate, you can also politely remind them they can check the RoadWatch web-app for real-time anomaly data."
-        )
+        web_context = ""
+        if DDGS is not None:
+            try:
+                with DDGS() as ddgs:
+                    results = list(ddgs.text(msg + " India road infrastructure", max_results=3))
+                if results:
+                    web_context = "\n".join([f"- {r['title']}: {r['body']}" for r in results])
+            except Exception as e:
+                print(f"Web search error: {e}")
+
+        if web_context:
+            system_msg += (
+                f"\n\nI couldn't find this in the local database, but here is LIVE WEB DATA to help answer the user:\n{web_context}\n"
+                "Use this web data to construct a helpful and factual answer. Do not just copy-paste, synthesize the information appropriately."
+            )
+        else:
+            system_msg += (
+                "\n\nThe user asked a query about a specific road or topic not in your local database. "
+                "Instead of refusing, please answer their question using your extensive general knowledge about Indian roads, highways, and infrastructure. "
+                "If appropriate, you can also politely remind them they can check the RoadWatch web-app for real-time anomaly data."
+            )
 
     if loc_info:
         system_msg += f"\n\nContext about user's current location: {loc_info}"
