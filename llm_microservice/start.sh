@@ -11,9 +11,7 @@ while ! curl -s http://127.0.0.1:11434 > /dev/null; do
     sleep 1
 done
 
-echo "Ollama is running. Pulling the model..."
-# Pull the requested model
-ollama pull llama3.2:1b
+echo "Ollama is running. Starting FastAPI..."
 
 echo "Model pulled successfully. Starting FastAPI..."
 # Start the FastAPI server (which acts as a proxy on port 7860)

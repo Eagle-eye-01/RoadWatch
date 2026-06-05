@@ -8,6 +8,9 @@ RUN apt-get update && apt-get install -y curl zstd && rm -rf /var/lib/apt/lists/
 # Install Ollama
 RUN curl -fsSL https://ollama.com/install.sh | sh
 
+# Pre-pull the model during build so it starts instantly on wake
+RUN nohup bash -c "ollama serve &" && sleep 5 && ollama pull llama3.2:1b
+
 # Install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
